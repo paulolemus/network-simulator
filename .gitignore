@@ -1,3 +1,18 @@
+# Everything
+*
+
+# un-ignore
+!*.c
+!*.h
+!*.config
+!*.md
+!*.txt
+!*/
+!makefile
+!make
+!Makefile
+
+
 # Object files
 *.o
 *.ko

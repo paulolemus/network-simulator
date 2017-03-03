@@ -4,7 +4,7 @@ EE367 Lab Project
 
 This is Lab 6
 
-Included: 
+Included : 
 
 *  The software files for the network simulator "net367"
 	including the makefile       

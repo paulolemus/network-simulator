@@ -34,14 +34,14 @@ struct switch_job_queue {
 struct table_node {
     char host_id;
     int port_num;
-    table_node* left;
-    table_node* right;
+    struct table_node* left;
+    struct table_node* right;
     char color;
 };
 
 struct forward_table {
-    table_node* root;
-    table_node* null;
+    struct table_node* root;
+    struct table_node* null;
     int size;
 };
 

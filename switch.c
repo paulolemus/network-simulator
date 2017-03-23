@@ -86,3 +86,59 @@ int job_q_num(struct job_queue *j_q)
 return j_q->occ;
 }
 
+
+void switch_main(int switch_id)
+{
+char dir[MAX_DIR_NAME];
+int dir_valid = 0;
+
+struct net_port *node_port_list;
+struct net_port **node_port;	//Array of Pointers to Node Ports
+int node_port_num;		//Number of node ports
+
+int ping_reply_received;
+
+int i, k, n;
+int dst;
+char name[MAX_FILE_NAME];
+char string[PKT_PAYLOAD_MAX+1];
+
+FILE *fp;
+
+struct packet *in_packet; /* Incoming Packet */
+struct packet *new_packet;
+
+struct net_port *p;
+struct switch_job *new_job;
+struct switch_job *new_job2;
+
+struct job_queue job_q;
+
+/*
+ * Create an array node_port[ ] to store the network link ports
+ * at the host.  The number of ports is node_port_num
+ */
+node_port_list = net_get_port_list(switch_id);
+
+        /*  Count the number of network link ports */
+node_port_num = 0;
+for (p=node_port_list; p!=NULL; p=p->next) {
+        node_port_num++;
+}
+        /* Create memory space for the array */
+node_port = (struct net_port **)
+        malloc(node_port_num*sizeof(struct net_port *));
+
+        /* Load ports into the array */
+p = node_port_list;
+for (k = 0; k < node_port_num; k++) {
+        node_port[k] = p;
+        p = p->next;
+}
+
+/* Initialize the job queue */
+job_q_init(&job_q);
+
+while(1) {
+	
+}

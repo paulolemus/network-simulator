@@ -28,7 +28,8 @@
 #define MAX_FILE_BUFFER 1000
 #define MAX_FILE_NAME 100
 #define MAX_MSG_LENGTH 100
-#define 
+#define MAX_DIR_NAME 100
+#define PKT_PAYLOAD_MAX 100 
 #define TENMILLISEC 10000 //10 milliseconds
 
 enum switch_job_type {

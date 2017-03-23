@@ -12,8 +12,8 @@ host.o: host.c
 man.o:  man.c
 	gcc -c man.c
 
-net.o:  net.c
-	gcc -c net.c
+net.o:  net_switch.c
+	gcc -c net_switch.c
 
 packet.o:  packet.c
 	gcc -c packet.c

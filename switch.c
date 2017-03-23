@@ -133,7 +133,7 @@ void switch_main(int switch_id)
 		printf("Received a Packet!!!\n");
 		printf("src: %d \n", in_packet->src);
 		printf("dst: %d \n", in_packet->dst);
-		printf("type: %s \n", in_packet->type);
+		printf("type: %d \n", in_packet->type);
 		printf("length: %d \n", in_packet->length);
                 for(i = 0; i < node_port_num; i++){
                     packet_send(node_port[k], in_packet);

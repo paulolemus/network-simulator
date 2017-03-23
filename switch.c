@@ -131,6 +131,10 @@ void switch_main(int switch_id)
                 //			new_job->packet = in_packet;
 
 		printf("Received a Packet!!!\n");
+		printf("src: %c \n", in_packet->src);
+		printf("dst: %c \n", in_packet->dst);
+		printf("type: %c \n", in_packet->type);
+		printf("length: %d \n", in_packet->length);
                 for(i = 0; i < node_port_num; i++){
                     packet_send(node_port[k], in_packet);
                 }

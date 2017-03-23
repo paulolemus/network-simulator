@@ -12,8 +12,8 @@
  */
 
 enum switch_job_type {
-	JOB_SEND_PKT_ALL_PORTS,
-    JOB_SEND_TO_PORT
+	SWITCH_JOB_SEND_ALL_PORTS,
+    SWITCH_JOB_SEND_TO_PORT
 };
 
 struct switch_job {

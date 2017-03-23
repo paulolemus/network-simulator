@@ -25,6 +25,8 @@
 #include "packet.h"
 #include "switch.h"
 
+#define TENMILLISEC 10000
+
 /*
  * Operations requested by the manager
  */
@@ -130,19 +132,18 @@ void switch_main(int switch_id)
                 //			new_job->in_port_index = k;
                 //			new_job->packet = in_packet;
 
-		printf("Received a Packet!!!\n");
-		printf("src: %d \n", in_packet->src);
-		printf("dst: %d \n", in_packet->dst);
-		printf("type: %d \n", in_packet->type);
-		printf("length: %d \n", in_packet->length);
+                printf("Received a Packet!!!\n");
+                printf("src: %d \n", in_packet->src);
+                printf("dst: %d \n", in_packet->dst);
+                printf("type: %d \n", in_packet->type);
+                printf("length: %d \n", in_packet->length);
                 for(i = 0; i < node_port_num; i++){
                     packet_send(node_port[k], in_packet);
                 }
 
-                free(in_packet);
             }
-
-            else	free(in_packet);
-        }		
-    }
+            free(in_packet);
+        }
+        usleep(TENMILLISEC);
+    } /* End while loop */
 }

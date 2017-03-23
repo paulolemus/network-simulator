@@ -140,5 +140,23 @@ for (k = 0; k < node_port_num; k++) {
 job_q_init(&job_q);
 
 while(1) {
-	
+	/* Receive packet from a host */
+	for(k = 0; k < node_port_num; k++) {
+		in_packet = (struct packet *) malloc(sizeof(struct packet));
+		n = packet_recv(node_port[k], in_packet);
+		if(n > 0) {
+//			new_job = (struct switch_job *)
+//				malloc(sizeof(struct switch_job));
+//			new_job->in_port_index = k;
+//			new_job->packet = in_packet;
+
+			for(i = 0; i < node_port_num; i++){
+				packet_send(node_port[k], in_packet);
+			}
+
+			free(in_packet);
+		}
+		
+		else	free(in_packet);
+	}		
 }

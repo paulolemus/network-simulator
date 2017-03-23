@@ -22,12 +22,12 @@ struct switch_job {
         int in_port_index;
         int out_port_index;
         int file_upload_dst;
-        struct host_job *next;
+        struct switch_job *next;
 };
 
 struct job_queue {
-        struct host_job *head;
-        struct host_job *tail;
+        struct switch_job *head;
+        struct switch_job *tail;
         int occ;
 };
 

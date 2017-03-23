@@ -33,7 +33,7 @@
 /* Job queue operations */
 
 /* Add a job to the job queue */
-void job_q_add(struct job_queue *j_q, struct switch_job *j)
+void switch_job_q_add(struct switch_job_queue *j_q, struct switch_job *j)
 {
     if (j_q->head == NULL ) {
         j_q->head = j;
@@ -49,7 +49,7 @@ void job_q_add(struct job_queue *j_q, struct switch_job *j)
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct switch_job *job_q_remove(struct job_queue *j_q)
+struct switch_job *switch_job_q_remove(struct switch_job_queue *j_q)
 {
     struct switch_job *j;
 
@@ -61,14 +61,14 @@ struct switch_job *job_q_remove(struct job_queue *j_q)
 }
 
 /* Initialize job queue */
-void job_q_init(struct job_queue *j_q)
+void switch_job_q_init(struct switch_job_queue *j_q)
 {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_num(struct job_queue *j_q)
+int switch_job_q_num(struct switch_job_queue *j_q)
 {
     return j_q->occ;
 }
@@ -92,7 +92,7 @@ void switch_main(int switch_id)
     struct switch_job *new_job;
     struct switch_job *new_job2;
 
-    struct job_queue job_q;
+    struct switch_job_queue job_q;
 
     /*
      * Create an array node_port[ ] to store the network link ports
@@ -117,7 +117,7 @@ void switch_main(int switch_id)
     }
 
     /* Initialize the job queue */
-    job_q_init(&job_q);
+    switch_job_q_init(&job_q);
 
     while(1) {
         /* Receive packet from a host */
@@ -130,6 +130,7 @@ void switch_main(int switch_id)
                 //			new_job->in_port_index = k;
                 //			new_job->packet = in_packet;
 
+		printf("Received a Packet!!!\n");
                 for(i = 0; i < node_port_num; i++){
                     packet_send(node_port[k], in_packet);
                 }
@@ -140,3 +141,4 @@ void switch_main(int switch_id)
             else	free(in_packet);
         }		
     }
+}

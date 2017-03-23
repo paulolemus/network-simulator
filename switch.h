@@ -25,7 +25,7 @@ struct switch_job {
         struct switch_job *next;
 };
 
-struct job_queue {
+struct switch_job_queue {
         struct switch_job *head;
         struct switch_job *tail;
         int occ;

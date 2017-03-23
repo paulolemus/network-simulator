@@ -47,6 +47,7 @@ void main()
             }
             else if (p_node->type = SWITCH) {
                 /* Execute switch routine, which you have to write */
+                switch_main(p_node->id); // TODO: WRITE MAIN
             }
             return;
         }  

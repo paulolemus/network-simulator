@@ -465,7 +465,6 @@ else {
 	g_net_node =(struct net_node*) malloc(sizeof(struct net_node)*node_num);
 	for (i=0; i<node_num; i++) { 
 		fscanf(fp, " %c ", &node_type);
-
 		if (node_type = 'H') {
 			fscanf(fp, " %d ", &node_id);
 			g_net_node[i].type = HOST;

@@ -461,13 +461,13 @@ int load_net_data_file()
         for (i=0; i<node_num; i++) { 
             fscanf(fp, " %c ", &node_type);
 
-            if (node_type = 'H') {
+            if (node_type == 'H') {
                 fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = HOST;
                 g_net_node[i].id = node_id;
             }
             // Added this else if statement
-            else if (node_type = 'S') {
+            else if (node_type == 'S') {
                 fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;

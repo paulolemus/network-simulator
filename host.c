@@ -586,7 +586,7 @@ void host_main(int host_id)
                              * 2 Last packet gets END tag
                              */
                             while( (n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp))
-                                    == 
+                                    >= 
                                     PKT_PAYLOAD_MAX
                                  ) {
                                 string[n] = '\0';
@@ -617,6 +617,7 @@ void host_main(int host_id)
 
                             } // while
                             fclose(fp);
+                            string[n] = '\0';
                             new_packet = (struct packet *)
                                 malloc(sizeof(struct packet));
                             new_packet->dst = new_job->file_upload_dst;

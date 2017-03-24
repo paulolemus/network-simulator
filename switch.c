@@ -25,7 +25,7 @@
 #include "packet.h"
 #include "switch.h"
 
-#define TENMILLISEC 10000
+#define FIVEMILLISEC 5000
 
 /*
  * Operations requested by the manager
@@ -151,6 +151,6 @@ void switch_main(int switch_id)
             }
             free(in_packet);
         }
-        usleep(TENMILLISEC);
+        usleep(FIVEMILLISEC);
     } /* End while loop */
 }

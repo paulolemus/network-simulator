@@ -169,6 +169,7 @@ void reply_display_host_state(
 void job_q_add(struct job_queue *j_q, struct host_job *j)
 {
     if (j_q->head == NULL ) {
+        j->next = NULL;
         j_q->head = j;
         j_q->tail = j;
         j_q->occ = 1;
@@ -626,7 +627,7 @@ void host_main(int host_id)
                             new_job2->packet = new_packet;
                             job_q_add(&job_q, new_job2);
                             
-                            printf("\nAdded end packet");
+                            printf("\n\nAdded end packet\n");
 
                             free(new_job);
                             ////////////////////////////////////////

@@ -38,6 +38,7 @@
 void switch_job_q_add(struct switch_job_queue *j_q, struct switch_job *j)
 {
     if (j_q->head == NULL ) {
+        j->next = NULL;
         j_q->head = j;
         j_q->tail = j;
         j_q->occ = 1;
@@ -107,6 +108,7 @@ void switch_main(int switch_id)
     for (p=node_port_list; p!=NULL; p=p->next) {
         node_port_num++;
     }
+    printf("\nSwitch node_port_num: %d\n", node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **)
         malloc(node_port_num*sizeof(struct net_port *));
@@ -132,13 +134,14 @@ void switch_main(int switch_id)
                 //			new_job->in_port_index = k;
                 //			new_job->packet = in_packet;
 
-                printf("Received a Packet!!!\n");
+                printf("\nSwitch received a Packet!\n");
                 printf("src: %d \n", in_packet->src);
                 printf("dst: %d \n", in_packet->dst);
                 printf("type: %d \n", in_packet->type);
                 printf("length: %d \n", in_packet->length);
+                printf("payload: %s \n", in_packet->payload);
                 for(i = 0; i < node_port_num; i++){
-                    packet_send(node_port[k], in_packet);
+                    packet_send(node_port[i], in_packet);
                 }
 
             }

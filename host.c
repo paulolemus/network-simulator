@@ -580,7 +580,7 @@ void host_main(int host_id)
                                     == 
                                     PKT_PAYLOAD_MAX
                                  ) {
-
+                                string[n] = '\0';
                                 new_packet = (struct packet *) 
                                     malloc(sizeof(struct packet));
                                 new_packet->dst = new_job->file_upload_dst;
@@ -588,8 +588,7 @@ void host_main(int host_id)
                                 new_packet->type = PKT_FILE_UPLOAD_IN;
 
                                 for (i=0; i<n; i++) {
-                                    new_packet->payload[i] 
-                                        = string[i];
+                                    new_packet->payload[i] = string[i];
                                 }
 
                                 new_packet->length = n;
@@ -615,7 +614,6 @@ void host_main(int host_id)
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_END;
 
-                            string[n] = '\0';
                             for (i=0; i < n; i++) {
                                 new_packet->payload[i] = string[i];
                             }
@@ -716,7 +714,6 @@ void host_main(int host_id)
                             fclose(fp);
                         }	
                     }
-
                     break;
             }
 

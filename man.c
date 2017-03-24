@@ -226,9 +226,9 @@ int file_download(struct man_port_at_man* curr_host)
     char name[NAME_LENGTH];
     char msg[NAME_LENGTH];
 
-    printf("Enter file name to download:  ");
+    printf("Enter file name to download: ");
     scanf("%s", name);
-    printf("Enter host id of file location:  ");
+    printf("Enter host id of file location: ");
     scanf("%d", &host_id);
     printf("\n");
 

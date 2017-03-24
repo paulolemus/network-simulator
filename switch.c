@@ -139,7 +139,11 @@ void switch_main(int switch_id)
                 printf("dst: %d \n", in_packet->dst);
                 printf("type: %d \n", in_packet->type);
                 printf("length: %d \n", in_packet->length);
-                printf("payload: %s \n", in_packet->payload);
+                printf("payload: ");
+                for(i = 0; i < in_packet->length; ++i) {
+                    printf("%c", in_packet->payload[i]);
+                } printf("\n");
+
                 for(i = 0; i < node_port_num; i++){
                     packet_send(node_port[i], in_packet);
                 }

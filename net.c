@@ -43,8 +43,14 @@ struct net_link {
     enum NetLinkType type;
     int pipe_node0;
     int pipe_node1;
+    
+    int socket_node;
+    char domain0;
+    int tcp0;
+    char domain1;
+    int tcp1;
+    
 };
-
 
 /* 
  * The following are private global variables to this file net.c

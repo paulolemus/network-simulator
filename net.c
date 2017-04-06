@@ -376,8 +376,9 @@ void create_node_list()
 
 }
 
+//get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
-	if(sa->sa_famile == AF_INET) {
+	if(sa->sa_family == AF_INET) {
 		return &(((struct sockaddr_in *) sa)
 			  ->sin_addr);
 	}
@@ -401,7 +402,7 @@ void create_port_list()
     struct sockaddr_storage their_addr;
     socklen_t sin_size;
 
-    struct addrinfo *servinfo;
+    struct addrinfo hints, *servinfo;
     int rv;
 
     g_port_list = NULL;
@@ -447,7 +448,7 @@ void create_port_list()
             int sockfd = socket(AF_UNSPEC, SOCK_STREAM, 0);
 	
 	    //Set Socket to Nonblocking
-	    fcntl(sockfd, FSETFL, fcntl(sockfd, F_GETFL, 0) | 
+	    fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | 
 					O_NONBLOCK);
 
 	    //Enable "Listening" for Connections
@@ -456,6 +457,15 @@ void create_port_list()
 	    //Wait for Connection
 	    int newsockfd = accept(sockfd, (struct sockaddr *)
 				   &their_addr, &sin_size);
+
+	    //Get Domain and TCP/IP of Second Node
+/*	    memset(&hints, 0, sizeof hints);
+	    if((rv = getaddrinfo(g_net_link[i].socket_domain0,
+				 g_net_link[i].socket_tcp0,
+				 &hints,
+				 &servinfo)) != 0) {
+		printf("getaddrinfo ERROR\n");
+	    }*/ 
         }
     }
 

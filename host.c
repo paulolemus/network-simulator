@@ -723,7 +723,7 @@ void host_main(int host_id)
 
                             fclose(fp);
                         }	
-                    }
+                    } // dir_valid
                     break;
             }
 

@@ -26,6 +26,7 @@
 #include "switch.h"
 
 #define FIVEMILLISEC 5000
+#define TABLE_SIZE   100
 
 /*
  * Operations requested by the manager
@@ -76,6 +77,33 @@ int switch_job_q_num(struct switch_job_queue *j_q)
     return j_q->occ;
 }
 
+struct net_port** init_table(struct net_port** list) 
+{
+    struct net_port** table = (struct net_port **)
+        malloc(TABLE_SIZE * sizeof(struct net_port*));
+
+    int i;
+    for(i = 0; i < TABLE_SIZE; ++i) table[i] = NULL;
+
+    struct net_port* port;
+    printf("PORT ITERATION HOSTS:");
+    for(port = list[0]; port != NULL; port = port->next) {
+        printf("%d ", port->pipe_host_id);
+    }
+    // These are the actual send FDs to send from
+    // this switch to all the hosts
+    printf("\nPORT ITERATION SEND:");
+    for(port = list[0]; port != NULL; port = port->next) {
+        printf("%d ", port->pipe_send_fd);
+    }
+    // Hosts send to these FDs for switch to receive
+    printf("\nPORT ITERATION RECV:");
+    for(port = list[0]; port != NULL; port = port->next) {
+        printf("%d ", port->pipe_recv_fd);
+    } printf("\n");
+    return table;
+}
+
 
 void switch_main(int switch_id)
 {
@@ -120,6 +148,10 @@ void switch_main(int switch_id)
         p = p->next;
     }
 
+    // Create an array of pointers to net_port structs,
+    // with host id as the index
+    struct net_port** table = init_table(node_port);
+
     /* Initialize the job queue */
     switch_job_q_init(&job_q);
 
@@ -129,6 +161,15 @@ void switch_main(int switch_id)
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
             if(n > 0) {
+                
+                // Check if the src is in the table. If not, add the net_port
+                if((int)in_packet->src >= 0         &&
+                   (int)in_packet->src < TABLE_SIZE &&
+                    table[in_packet->src] == NULL) {
+
+                    table[in_packet->src] = node_port[k];
+                }
+
                 //			new_job = (struct switch_job *)
                 //				malloc(sizeof(struct switch_job));
                 //			new_job->in_port_index = k;
@@ -144,13 +185,30 @@ void switch_main(int switch_id)
                     printf("%c", in_packet->payload[i]);
                 } printf("\n");
 
-                for(i = 0; i < node_port_num; i++){
-                    packet_send(node_port[i], in_packet);
+                
+                // Check table to see if we have the dest FD
+                if(table[in_packet->dst] != NULL) {
+                    printf("Sending to specific FD\n");
+                    packet_send(table[in_packet->dst], in_packet);
+                }
+                else {
+                    printf("sending to all FDs\n");
+                    for(i = 0; i < node_port_num; i++){
+                        packet_send(node_port[i], in_packet);
+                    }
                 }
 
             }
             free(in_packet);
+        } // for loop - receive packets
+
+
+        // Execute one job in queue
+        if(switch_job_q_num(&job_q) > 0) {
+
+
         }
+
         usleep(FIVEMILLISEC);
     } /* End while loop */
 }

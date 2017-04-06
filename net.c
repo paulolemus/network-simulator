@@ -458,6 +458,12 @@ void create_port_list()
 
         }
         else if (g_net_link[i].type == SOCKET) { 
+	    snode = g_net_link[i].socket_node;
+	    sock = (struct net_port *) 
+			malloc(sizeof(struct net_port));
+            sock->type = g_net_link[i].type;
+            sock->pipe_host_id = snode;
+
 
             // Initialize Remote Socket Address Info
             printf("Initializing sockfd0 address\n");
@@ -563,6 +569,9 @@ void create_port_list()
 
             printf("Got connection from %s\n", s0);
             // 	    }
+
+	    sock->next = g_port_list;
+	    g_port_list = sock;
         }
     }
 

@@ -16,12 +16,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ctype.h>
-
+#include <sys/wait.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #define _GNU_SOURCE
 #include <fcntl.h>
@@ -40,7 +42,7 @@
 
 #define SOCKET_RECV 0
 #define SOCKET_SEND 1
-#define BACKLOG 5
+#define BACKLOG 10
 
 #define MAX_DOMAIN_NAME 100
 
@@ -376,6 +378,10 @@ void create_node_list()
 
 }
 
+void sigchld_handler(int s) {
+	while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
 //get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
 	if(sa->sa_family == AF_INET) {
@@ -394,15 +400,23 @@ void create_port_list()
 {
     struct net_port *p0;
     struct net_port *p1;
+    struct net_port *sock;
     int node0, node1;
+    int snode;
     int fd01[2];
     int fd10[2];
+    int sockfd0, sockfd1;
+    int newsockfd;
     int i;
+    int yes = 1;
+    struct sigaction sa;
+    char s0[INET6_ADDRSTRLEN];
+    char s1[INET6_ADDRSTRLEN];
 
     struct sockaddr_storage their_addr;
     socklen_t sin_size;
 
-    struct addrinfo hints, *servinfo;
+    struct addrinfo hints, *servinfo, *ps0, *ps1;
     int rv;
 
     g_port_list = NULL;
@@ -443,29 +457,112 @@ void create_port_list()
             g_port_list = p0;
 
         }
-        else if (g_net_link[i].type == SOCKET) {
-            // Initialize Socket
-            int sockfd = socket(AF_UNSPEC, SOCK_STREAM, 0);
+        else if (g_net_link[i].type == SOCKET) { 
+	   
+            // Initialize Remote Socket Address Info
+            printf("Initializing sockfd0 address\n");
+            memset(&hints, 0, sizeof hints);
+	    hints.ai_family = AF_UNSPEC;
+	    hints.ai_socktype = SOCK_STREAM;
+	    hints.ai_flags = AI_PASSIVE;
+		
+	    char str_tcp0[4];
+	    sprintf(str_tcp0, "%d", g_net_link[i].socket_tcp0);
+	    getaddrinfo(g_net_link[i].socket_domain0, 
+			str_tcp0, &hints, &servinfo);
+	    printf("%d\n", g_net_link[i].socket_tcp0);
+	    printf("%s\n", str_tcp0);
+
+	    for(ps0 = servinfo; ps0 != NULL; ps0 = ps0->ai_next) {
+		//Initialize Socket
+		printf("Initializing sockfd0\n");
+            	sockfd0 = socket(ps0->ai_family, ps0->ai_socktype,
+				ps0->ai_protocol);
 	
+		//Set Socket Opt
+		printf("Setting sockopt\n");
+		setsockopt(sockfd0, SOL_SOCKET, SO_REUSEADDR, 
+			   &yes, sizeof(int));	
+
+	    	//Bind Socket to TCP/IP Address
+	    	printf("Binding sockfd0\n");
+	    	bind(sockfd0, ps0->ai_addr, ps0->ai_addrlen);
+
+		break;
+	    }
+
+
 	    //Set Socket to Nonblocking
-	    fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | 
+	    printf("Setting sockfd0 to nonblock\n");
+	    fcntl(sockfd0, F_SETFL, fcntl(sockfd0, F_GETFL, 0) | 
 					O_NONBLOCK);
+	
+	    freeaddrinfo(servinfo);
 
 	    //Enable "Listening" for Connections
-	    listen(sockfd, BACKLOG);
-            
-	    //Wait for Connection
-	    int newsockfd = accept(sockfd, (struct sockaddr *)
-				   &their_addr, &sin_size);
+	    printf("Enable listening\n");
+	    listen(sockfd0, BACKLOG);
 
-	    //Get Domain and TCP/IP of Second Node
-/*	    memset(&hints, 0, sizeof hints);
-	    if((rv = getaddrinfo(g_net_link[i].socket_domain0,
-				 g_net_link[i].socket_tcp0,
-				 &hints,
-				 &servinfo)) != 0) {
-		printf("getaddrinfo ERROR\n");
-	    }*/ 
+	    //Initialize Current Socket Address Info
+	    printf("Initialize sockfd1 address\n");
+	    char str_tcp1[4];
+	    sprintf(str_tcp1, "%d", g_net_link[i].socket_tcp1);
+	    printf("%d\n", g_net_link[i].socket_tcp1);
+	    printf("%s\n", str_tcp1);
+	    getaddrinfo(g_net_link[i].socket_domain1, 
+			str_tcp1, &hints, &servinfo);
+
+	    for(ps1 = servinfo; ps1 != NULL; ps1 = ps1->ai_next) {
+		//Initialize Socket
+		printf("Initialize sockfd1\n");
+		sockfd1 = socket(ps1->ai_family, ps1->ai_socktype,
+				ps1->ai_protocol);
+
+		//Connect Socket
+		printf("Connecting sockfd1\n");
+		connect(sockfd1, ps1->ai_addr, ps1->ai_addrlen);
+
+		break;
+	    }
+
+	   //Set Socket to Nonblocking
+	   printf("Setting sockfd1 to nonblock\n");
+	   fcntl(sockfd1, F_SETFL, fcntl(sockfd1, F_GETFL, 0) |
+					O_NONBLOCK);
+		
+	    printf("inet_ntop start\n");
+	    inet_ntop(ps1->ai_family, 
+		      get_in_addr((struct sockaddr *) 
+			ps1->ai_addr), s1, sizeof s1);
+	    printf("inet_ntop end\n");
+
+//	    printf("freeing servinfo\n");
+//	    freeaddrinfo(servinfo);
+
+	    printf("Handlers Start\n");
+	    sa.sa_handler = sigchld_handler;
+	    sigemptyset(&sa.sa_mask);
+	    sa.sa_flags = SA_RESTART;
+	    sigaction(SIGCHLD, &sa, NULL);
+	    printf("Handlers End\n");
+            
+	    printf("Waiting for connections...\n");
+
+//	    while(1) {
+		sin_size = sizeof their_addr;
+
+	    	//Wait for Connection
+	    	int newsockfd = accept(sockfd0, 
+					(struct sockaddr *)
+					&their_addr, &sin_size);
+		
+		inet_ntop(their_addr.ss_family,
+			  get_in_addr((struct sockaddr *)
+					&their_addr), s0, 
+					sizeof s0);
+
+		printf("Got connection from %s\n", s0);
+// 	    }
         }
     }
 

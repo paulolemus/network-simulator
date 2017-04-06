@@ -31,19 +31,4 @@ struct switch_job_queue {
         int occ;
 };
 
-struct table_node {
-    char host_id;
-    int port_num;
-    struct table_node* left;
-    struct table_node* right;
-    char color;
-};
-
-struct forward_table {
-    struct table_node* root;
-    struct table_node* null;
-    int size;
-};
-
-
 void switch_main(int switch_id);

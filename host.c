@@ -350,10 +350,9 @@ void host_main(int host_id)
                     /* Create packet */
                     new_packet = (struct packet *)
                         malloc(sizeof(struct packet));
-                    for(i = 0; name[i] != '\0'; i++) {
+                    for(i = 0; name[i] != '\0'; ++i) {
                         new_packet->payload[i] = name[i];
                     }
-                    new_packet->payload[i] = '\0';
                     new_packet->length = i;
                     new_packet->src    = (char) host_id;
                     new_packet->dst    = (char) dst;
@@ -437,7 +436,7 @@ void host_main(int host_id)
 
                     case (char) PKT_FILE_DOWNLOAD_REQ:
                         new_job->type = JOB_FILE_UPLOAD_SEND;
-                        for(i = 0; in_packet->payload[i] != '\0'; i++) {
+                        for(i = 0; i < in_packet->length; ++i) {
                             new_job->fname_upload[i] = in_packet->payload[i];
                         }
                         new_job->fname_upload[i] = '\0';
@@ -472,6 +471,16 @@ void host_main(int host_id)
                 /* Send packets on all ports */	
                 case JOB_SEND_PKT_ALL_PORTS:
                     for (k=0; k<node_port_num; k++) {
+                        printf("\nHost %d sending packet:\n", host_id);
+                        printf("src: %d\n", new_job->packet->src);
+                        printf("dst: %d\n", new_job->packet->dst);
+                        printf("type: %d\n", new_job->packet->type);
+                        printf("length: %d\n", new_job->packet->length);
+                        printf("payload: ");
+                        int ii;
+                        for(ii = 0; ii < new_job->packet->length; ++ii) {
+                            printf("%c", new_job->packet->payload[ii]);
+                        } printf("\n");
                         packet_send(node_port[k], new_job->packet);
                     }
                     free(new_job->packet);
@@ -577,7 +586,7 @@ void host_main(int host_id)
                              * 2 Last packet gets END tag
                              */
                             while( (n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp))
-                                    == 
+                                    >= 
                                     PKT_PAYLOAD_MAX
                                  ) {
                                 string[n] = '\0';
@@ -608,6 +617,7 @@ void host_main(int host_id)
 
                             } // while
                             fclose(fp);
+                            string[n] = '\0';
                             new_packet = (struct packet *)
                                 malloc(sizeof(struct packet));
                             new_packet->dst = new_job->file_upload_dst;
@@ -713,7 +723,7 @@ void host_main(int host_id)
 
                             fclose(fp);
                         }	
-                    }
+                    } // dir_valid
                     break;
             }
 

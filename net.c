@@ -538,8 +538,8 @@ void create_port_list()
 
             printf("inet_ntop start\n");
             inet_ntop(ps1->ai_family, 
-                    get_in_addr((struct sockaddr *) 
-                        ps1->ai_addr), s1, sizeof s1);
+                    get_in_addr((struct sockaddr *)&ps1->ai_addr), 
+                    s1, sizeof s1);
             printf("inet_ntop end\n");
 
             //	    printf("freeing servinfo\n");
@@ -570,8 +570,10 @@ void create_port_list()
             printf("Got connection from %s\n", s0);
             // 	    }
 
-	    sock->next = g_port_list;
-	    g_port_list = sock;
+            sock->sock_send_fd = sockfd1;
+            sock->sock_recv_fd = sockfd0;
+	        sock->next = g_port_list;
+	        g_port_list = sock;
         }
     }
 

@@ -15,7 +15,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netdb.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <ctype.h>
+
+#include <arpa/inet.h>
 
 #define _GNU_SOURCE
 #include <fcntl.h>
@@ -31,6 +37,10 @@
 #define MAX_FILE_NAME 100
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define SOCKET_RECV 0
+#define SOCKET_SEND 1
+#define BACKLOG 5
 
 #define MAX_DOMAIN_NAME 100
 
@@ -366,6 +376,15 @@ void create_node_list()
 
 }
 
+void *get_in_addr(struct sockaddr *sa) {
+	if(sa->sa_famile == AF_INET) {
+		return &(((struct sockaddr_in *) sa)
+			  ->sin_addr);
+	}
+
+	return &(((struct sockaddr_in6 *) sa)->sin6_addr);
+}
+
 /*
  * Create links, each with either a pipe or socket.
  * It uses private global varaibles g_net_link[] and g_net_link_num
@@ -378,6 +397,12 @@ void create_port_list()
     int fd01[2];
     int fd10[2];
     int i;
+
+    struct sockaddr_storage their_addr;
+    socklen_t sin_size;
+
+    struct addrinfo *servinfo;
+    int rv;
 
     g_port_list = NULL;
     for (i=0; i<g_net_link_num; i++) {
@@ -418,8 +443,19 @@ void create_port_list()
 
         }
         else if (g_net_link[i].type == SOCKET) {
-            // TODO: write this
+            // Initialize Socket
+            int sockfd = socket(AF_UNSPEC, SOCK_STREAM, 0);
+	
+	    //Set Socket to Nonblocking
+	    fcntl(sockfd, FSETFL, fcntl(sockfd, F_GETFL, 0) | 
+					O_NONBLOCK);
 
+	    //Enable "Listening" for Connections
+	    listen(sockfd, BACKLOG);
+            
+	    //Wait for Connection
+	    int newsockfd = accept(sockfd, (struct sockaddr *)
+				   &their_addr, &sin_size);
         }
     }
 

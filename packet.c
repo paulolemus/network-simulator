@@ -33,7 +33,19 @@ void packet_send(struct net_port *port, struct packet *p)
     }
 
     else if (port->type == SOCKET) {
-        
+        msg[0] = (char) p->src; 
+        msg[1] = (char) p->dst;
+        msg[2] = (char) p->type;
+        msg[3] = (char) p->length;
+        for (i=0; i<p->length; i++) {
+            msg[i+4] = p->payload[i];
+        }
+        send(port->sock_send_fd, msg, p->length+4, 0);
+        printf("PACKET SEND, src=%d dst=%d p-src=%d p-dst=%d\n", 
+                (int) msg[0], 
+                (int) msg[1], 
+                (int) p->src, 
+                (int) p->dst);
     }
 
     return;
@@ -61,6 +73,13 @@ int packet_recv(struct net_port *port, struct packet *p)
             //		(int) msg[1], 
             //		(int) p->src, 
             //		(int) p->dst);
+        }
+    }
+
+    else if(port->type == SOCKET) {
+        n = recv(port->sock_recv_fd, msg, PAYLOAD_MAX+4, 0);
+        if(n > 0) {
+
         }
     }
 

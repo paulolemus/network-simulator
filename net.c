@@ -57,13 +57,13 @@ struct net_link {
     enum NetLinkType type;
     int pipe_node0;
     int pipe_node1;
-    
+
     int socket_node;
     char socket_domain0[MAX_DOMAIN_NAME];
     int socket_tcp0;
     char socket_domain1[MAX_DOMAIN_NAME];
     int socket_tcp1;
-    
+
 };
 
 /* 
@@ -379,17 +379,17 @@ void create_node_list()
 }
 
 void sigchld_handler(int s) {
-	while(waitpid(-1, NULL, WNOHANG) > 0);
+    while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
 //get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
-	if(sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in *) sa)
-			  ->sin_addr);
-	}
+    if(sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in *) sa)
+                ->sin_addr);
+    }
 
-	return &(((struct sockaddr_in6 *) sa)->sin6_addr);
+    return &(((struct sockaddr_in6 *) sa)->sin6_addr);
 }
 
 /*
@@ -458,111 +458,111 @@ void create_port_list()
 
         }
         else if (g_net_link[i].type == SOCKET) { 
-	   
+
             // Initialize Remote Socket Address Info
             printf("Initializing sockfd0 address\n");
             memset(&hints, 0, sizeof hints);
-	    hints.ai_family = AF_UNSPEC;
-	    hints.ai_socktype = SOCK_STREAM;
-	    hints.ai_flags = AI_PASSIVE;
-		
-	    char str_tcp0[4];
-	    sprintf(str_tcp0, "%d", g_net_link[i].socket_tcp0);
-	    getaddrinfo(g_net_link[i].socket_domain0, 
-			str_tcp0, &hints, &servinfo);
-	    printf("%d\n", g_net_link[i].socket_tcp0);
-	    printf("%s\n", str_tcp0);
+            hints.ai_family = AF_UNSPEC;
+            hints.ai_socktype = SOCK_STREAM;
+            hints.ai_flags = AI_PASSIVE;
 
-	    for(ps0 = servinfo; ps0 != NULL; ps0 = ps0->ai_next) {
-		//Initialize Socket
-		printf("Initializing sockfd0\n");
-            	sockfd0 = socket(ps0->ai_family, ps0->ai_socktype,
-				ps0->ai_protocol);
-	
-		//Set Socket Opt
-		printf("Setting sockopt\n");
-		setsockopt(sockfd0, SOL_SOCKET, SO_REUSEADDR, 
-			   &yes, sizeof(int));	
+            char str_tcp0[4];
+            sprintf(str_tcp0, "%d", g_net_link[i].socket_tcp0);
+            getaddrinfo(g_net_link[i].socket_domain0, 
+                    str_tcp0, &hints, &servinfo);
+            printf("%d\n", g_net_link[i].socket_tcp0);
+            printf("%s\n", str_tcp0);
 
-	    	//Bind Socket to TCP/IP Address
-	    	printf("Binding sockfd0\n");
-	    	bind(sockfd0, ps0->ai_addr, ps0->ai_addrlen);
+            for(ps0 = servinfo; ps0 != NULL; ps0 = ps0->ai_next) {
+                //Initialize Socket
+                printf("Initializing sockfd0\n");
+                sockfd0 = socket(ps0->ai_family, ps0->ai_socktype,
+                        ps0->ai_protocol);
 
-		break;
-	    }
+                //Set Socket Opt
+                printf("Setting sockopt\n");
+                setsockopt(sockfd0, SOL_SOCKET, SO_REUSEADDR, 
+                        &yes, sizeof(int));	
+
+                //Bind Socket to TCP/IP Address
+                printf("Binding sockfd0\n");
+                bind(sockfd0, ps0->ai_addr, ps0->ai_addrlen);
+
+                break;
+            }
 
 
-	    //Set Socket to Nonblocking
-	    printf("Setting sockfd0 to nonblock\n");
-	    fcntl(sockfd0, F_SETFL, fcntl(sockfd0, F_GETFL, 0) | 
-					O_NONBLOCK);
-	
-	    freeaddrinfo(servinfo);
+            //Set Socket to Nonblocking
+            printf("Setting sockfd0 to nonblock\n");
+            fcntl(sockfd0, F_SETFL, fcntl(sockfd0, F_GETFL, 0) | 
+                    O_NONBLOCK);
 
-	    //Enable "Listening" for Connections
-	    printf("Enable listening\n");
-	    listen(sockfd0, BACKLOG);
+            freeaddrinfo(servinfo);
 
-	    //Initialize Current Socket Address Info
-	    printf("Initialize sockfd1 address\n");
-	    char str_tcp1[4];
-	    sprintf(str_tcp1, "%d", g_net_link[i].socket_tcp1);
-	    printf("%d\n", g_net_link[i].socket_tcp1);
-	    printf("%s\n", str_tcp1);
-	    getaddrinfo(g_net_link[i].socket_domain1, 
-			str_tcp1, &hints, &servinfo);
+            //Enable "Listening" for Connections
+            printf("Enable listening\n");
+            listen(sockfd0, BACKLOG);
 
-	    for(ps1 = servinfo; ps1 != NULL; ps1 = ps1->ai_next) {
-		//Initialize Socket
-		printf("Initialize sockfd1\n");
-		sockfd1 = socket(ps1->ai_family, ps1->ai_socktype,
-				ps1->ai_protocol);
+            //Initialize Current Socket Address Info
+            printf("Initialize sockfd1 address\n");
+            char str_tcp1[4];
+            sprintf(str_tcp1, "%d", g_net_link[i].socket_tcp1);
+            printf("%d\n", g_net_link[i].socket_tcp1);
+            printf("%s\n", str_tcp1);
+            getaddrinfo(g_net_link[i].socket_domain1, 
+                    str_tcp1, &hints, &servinfo);
 
-		//Connect Socket
-		printf("Connecting sockfd1\n");
-		connect(sockfd1, ps1->ai_addr, ps1->ai_addrlen);
+            for(ps1 = servinfo; ps1 != NULL; ps1 = ps1->ai_next) {
+                //Initialize Socket
+                printf("Initialize sockfd1\n");
+                sockfd1 = socket(ps1->ai_family, ps1->ai_socktype,
+                        ps1->ai_protocol);
 
-		break;
-	    }
+                //Connect Socket
+                printf("Connecting sockfd1\n");
+                connect(sockfd1, ps1->ai_addr, ps1->ai_addrlen);
 
-	   //Set Socket to Nonblocking
-	   printf("Setting sockfd1 to nonblock\n");
-	   fcntl(sockfd1, F_SETFL, fcntl(sockfd1, F_GETFL, 0) |
-					O_NONBLOCK);
-		
-	    printf("inet_ntop start\n");
-	    inet_ntop(ps1->ai_family, 
-		      get_in_addr((struct sockaddr *) 
-			ps1->ai_addr), s1, sizeof s1);
-	    printf("inet_ntop end\n");
+                break;
+            }
 
-//	    printf("freeing servinfo\n");
-//	    freeaddrinfo(servinfo);
+            //Set Socket to Nonblocking
+            printf("Setting sockfd1 to nonblock\n");
+            fcntl(sockfd1, F_SETFL, fcntl(sockfd1, F_GETFL, 0) |
+                    O_NONBLOCK);
 
-	    printf("Handlers Start\n");
-	    sa.sa_handler = sigchld_handler;
-	    sigemptyset(&sa.sa_mask);
-	    sa.sa_flags = SA_RESTART;
-	    sigaction(SIGCHLD, &sa, NULL);
-	    printf("Handlers End\n");
-            
-	    printf("Waiting for connections...\n");
+            printf("inet_ntop start\n");
+            inet_ntop(ps1->ai_family, 
+                    get_in_addr((struct sockaddr *) 
+                        ps1->ai_addr), s1, sizeof s1);
+            printf("inet_ntop end\n");
 
-//	    while(1) {
-		sin_size = sizeof their_addr;
+            //	    printf("freeing servinfo\n");
+            //	    freeaddrinfo(servinfo);
 
-	    	//Wait for Connection
-	    	int newsockfd = accept(sockfd0, 
-					(struct sockaddr *)
-					&their_addr, &sin_size);
-		
-		inet_ntop(their_addr.ss_family,
-			  get_in_addr((struct sockaddr *)
-					&their_addr), s0, 
-					sizeof s0);
+            printf("Handlers Start\n");
+            sa.sa_handler = sigchld_handler;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags = SA_RESTART;
+            sigaction(SIGCHLD, &sa, NULL);
+            printf("Handlers End\n");
 
-		printf("Got connection from %s\n", s0);
-// 	    }
+            printf("Waiting for connections...\n");
+
+            //	    while(1) {
+            sin_size = sizeof their_addr;
+
+            //Wait for Connection
+            int newsockfd = accept(sockfd0, 
+                    (struct sockaddr *)
+                    &their_addr, &sin_size);
+
+            inet_ntop(their_addr.ss_family,
+                    get_in_addr((struct sockaddr *)
+                        &their_addr), s0, 
+                    sizeof s0);
+
+            printf("Got connection from %s\n", s0);
+            // 	    }
         }
     }
 
@@ -673,25 +673,25 @@ int load_net_data_file()
                 g_net_link[i].pipe_node1 = node1;
             }
 
-	    else if(link_type == 'S') {
-		fscanf(fp," %d %s %d %s %d ", &snode,
-					   &domain0, &tcp0, 
-					   &domain1, &tcp1);
-		g_net_link[i].type = SOCKET;
-		g_net_link[i].socket_node = snode;
-		for(int j = 0; domain0[j] != '\0'; j++) {
-			g_net_link[i].socket_domain0[j] = 
-			domain0[j];
-		}
-//		printf("%s\n", domain0);
-		g_net_link[i].socket_tcp0 = tcp0;
-		for(int k = 0; domain1[k] != '\0'; k++) {
-			g_net_link[i].socket_domain1[k] = 
-			domain1[k];
-		}
-//		printf("%s\n", domain1);
-		g_net_link[i].socket_tcp1 = tcp1;
-	    }
+            else if(link_type == 'S') {
+                fscanf(fp," %d %s %d %s %d ", &snode,
+                        &domain0, &tcp0, 
+                        &domain1, &tcp1);
+                g_net_link[i].type = SOCKET;
+                g_net_link[i].socket_node = snode;
+                for(int j = 0; domain0[j] != '\0'; j++) {
+                    g_net_link[i].socket_domain0[j] = 
+                        domain0[j];
+                }
+                printf("%s\n", domain0);
+                g_net_link[i].socket_tcp0 = tcp0;
+                for(int k = 0; domain1[k] != '\0'; k++) {
+                    g_net_link[i].socket_domain1[k] = 
+                        domain1[k];
+                }
+                printf("%s\n", domain1);
+                g_net_link[i].socket_tcp1 = tcp1;
+            }
 
             else {
                 printf("   net.c: Unidentified link type\n");
@@ -721,13 +721,13 @@ int load_net_data_file()
                     g_net_link[i].pipe_node1);
         }
         else if (g_net_link[i].type == SOCKET) {
-//            printf("   Socket: to be constructed (net.c)\n");
-	      printf("   Link (%d, %s, %d, %s, %d) SOCKET\n",
-			g_net_link[i].socket_node,
-			g_net_link[i].socket_domain0,
-			g_net_link[i].socket_tcp0,
-			g_net_link[i].socket_domain1,
-			g_net_link[i].socket_tcp1);
+            //            printf("   Socket: to be constructed (net.c)\n");
+            printf("   Link (%d, %s, %d, %s, %d) SOCKET\n",
+                    g_net_link[i].socket_node,
+                    g_net_link[i].socket_domain0,
+                    g_net_link[i].socket_tcp0,
+                    g_net_link[i].socket_domain1,
+                    g_net_link[i].socket_tcp1);
         }
     }
 

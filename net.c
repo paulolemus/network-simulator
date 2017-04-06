@@ -32,6 +32,8 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+#define MAX_DOMAIN_NAME 100
+
 enum bool {FALSE, TRUE};
 
 /* 
@@ -45,10 +47,10 @@ struct net_link {
     int pipe_node1;
     
     int socket_node;
-    char domain0;
-    int tcp0;
-    char domain1;
-    int tcp1;
+    char socket_domain0[MAX_DOMAIN_NAME];
+    int socket_tcp0;
+    char socket_domain1[MAX_DOMAIN_NAME];
+    int socket_tcp1;
     
 };
 
@@ -502,6 +504,10 @@ int load_net_data_file()
     char link_type;
     int node0, node1;
 
+    char domain0[MAX_DOMAIN_NAME]; 
+    char domain1[MAX_DOMAIN_NAME];
+    int tcp0, tcp1;
+
     fscanf(fp, " %d ", &link_num);
     printf("Number of links = %d\n", link_num);
     g_net_link_num = link_num;
@@ -521,6 +527,17 @@ int load_net_data_file()
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
             }
+
+	    else if(link_type == 'S') {
+		fscanf(fp," %s %d %s %d ", &domain0, &tcp0, 
+					   &domain1, &tcp1);
+		g_net_link[i].type = SOCKET;
+		g_net_link[i].socket_domain0 = domain0;
+		g_net_link[i].socket_tcp0 = tcp0;
+		g_net_link[i].socket_domain1 = domain1;
+		g_net_link[i].socket_tcp1 = tcp1;
+	    }
+
             else {
                 printf("   net.c: Unidentified link type\n");
             }
@@ -549,7 +566,12 @@ int load_net_data_file()
                     g_net_link[i].pipe_node1);
         }
         else if (g_net_link[i].type == SOCKET) {
-            printf("   Socket: to be constructed (net.c)\n");
+//            printf("   Socket: to be constructed (net.c)\n");
+	      printf("	Link (%s, %d, %s, %d) SOCKET\n",
+			g_net_link[i].socket_domain0,
+			g_net_link[i].socket_tcp0,
+			g_net_link[i].socket_domain1,
+			g_net_link[i].socket_tcp1);
         }
     }
 

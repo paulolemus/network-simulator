@@ -34,6 +34,7 @@ void packet_send(struct net_port *port, struct packet *p)
     }
 
     else if (port->type == SOCKET) {
+        printf("Entered socket send\n");
         msg[0] = (char) p->src; 
         msg[1] = (char) p->dst;
         msg[2] = (char) p->type;

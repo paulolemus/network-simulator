@@ -466,7 +466,7 @@ void create_port_list()
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_flags = AI_PASSIVE;
 
-            char str_tcp0[4];
+            char str_tcp0[6];
             sprintf(str_tcp0, "%d", g_net_link[i].socket_tcp0);
             getaddrinfo(g_net_link[i].socket_domain0, 
                     str_tcp0, &hints, &servinfo);

@@ -108,7 +108,7 @@ void switch_main(int switch_id)
     for (p=node_port_list; p!=NULL; p=p->next) {
         node_port_num++;
     }
-    printf("\nSwitch node_port_num: %d\n", node_port_num);
+//    printf("\nSwitch node_port_num: %d\n", node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **)
         malloc(node_port_num*sizeof(struct net_port *));

@@ -419,6 +419,7 @@ void create_port_list()
         }
         else if (g_net_link[i].type == SOCKET) {
             // TODO: write this
+
         }
     }
 
@@ -504,6 +505,7 @@ int load_net_data_file()
     char link_type;
     int node0, node1;
 
+    int snode;
     char domain0[MAX_DOMAIN_NAME]; 
     char domain1[MAX_DOMAIN_NAME];
     int tcp0, tcp1;
@@ -529,12 +531,22 @@ int load_net_data_file()
             }
 
 	    else if(link_type == 'S') {
-		fscanf(fp," %s %d %s %d ", &domain0, &tcp0, 
+		fscanf(fp," %d %s %d %s %d ", &snode,
+					   &domain0, &tcp0, 
 					   &domain1, &tcp1);
 		g_net_link[i].type = SOCKET;
-		g_net_link[i].socket_domain0 = domain0;
+		g_net_link[i].socket_node = snode;
+		for(int j = 0; domain0[j] != '\0'; j++) {
+			g_net_link[i].socket_domain0[j] = 
+			domain0[j];
+		}
+//		printf("%s\n", domain0);
 		g_net_link[i].socket_tcp0 = tcp0;
-		g_net_link[i].socket_domain1 = domain1;
+		for(int k = 0; domain1[k] != '\0'; k++) {
+			g_net_link[i].socket_domain1[k] = 
+			domain1[k];
+		}
+//		printf("%s\n", domain1);
 		g_net_link[i].socket_tcp1 = tcp1;
 	    }
 
@@ -567,7 +579,8 @@ int load_net_data_file()
         }
         else if (g_net_link[i].type == SOCKET) {
 //            printf("   Socket: to be constructed (net.c)\n");
-	      printf("	Link (%s, %d, %s, %d) SOCKET\n",
+	      printf("   Link (%d, %s, %d, %s, %d) SOCKET\n",
+			g_net_link[i].socket_node,
 			g_net_link[i].socket_domain0,
 			g_net_link[i].socket_tcp0,
 			g_net_link[i].socket_domain1,

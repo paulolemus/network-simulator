@@ -675,8 +675,8 @@ int load_net_data_file()
 
             else if(link_type == 'S') {
                 fscanf(fp," %d %s %d %s %d ", &snode,
-                        &domain0, &tcp0, 
-                        &domain1, &tcp1);
+                        domain0, &tcp0, 
+                        domain1, &tcp1);
                 g_net_link[i].type = SOCKET;
                 g_net_link[i].socket_node = snode;
                 for(int j = 0; domain0[j] != '\0'; j++) {

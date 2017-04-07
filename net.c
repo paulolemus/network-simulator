@@ -570,8 +570,8 @@ void create_port_list()
             printf("Got connection from %s\n", s0);
             // 	    }
 
-            sock->sock_send_fd = sockfd1;
-            sock->sock_recv_fd = sockfd0;
+            sock->sock_send_fd = newsockfd;
+            sock->sock_recv_fd = newsockfd;
 	        sock->next = g_port_list;
 	        g_port_list = sock;
         }

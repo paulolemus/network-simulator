@@ -470,7 +470,8 @@ void create_port_list()
             memset(&hints, 0, sizeof hints);
             hints.ai_family = AF_UNSPEC;
             hints.ai_socktype = SOCK_STREAM;
-            hints.ai_flags = AI_PASSIVE;
+            hints.ai_flags = AI_PASSIVE; //TODO: THIS fills in IP
+                                         // automatically. May not need
 
             char str_tcp0[6];
             sprintf(str_tcp0, "%d", g_net_link[i].socket_tcp0);

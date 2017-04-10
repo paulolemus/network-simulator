@@ -33,16 +33,18 @@
 
 #define TABLE_SIZE      100
 #define MAX_DOMAIN_NAME 100
+#define BACKLOG         10
 
 struct net_link {
-    int sockfd;
+    int hostfd;
+    struct net_link* next;
 };
 
 int main(int argc, char** argv) {
 
     int i, j, k;    // used for all forloops
     int sockfd;     // Nonblocking listening port
-    int newfd;      // Used for getting new connection fds from sockfd
+    int yes = 1;    // Yes
     char s0[INET6_ADDRSTRLEN]; // the address listening to
 
     char domain[MAX_DOMAIN_NAME]; // domain read from argv
@@ -55,6 +57,7 @@ int main(int argc, char** argv) {
     // Ensure user has a entered possible address and port
     if(argc != 3) {
         printf("Need to execute with local listen address and port\n");
+        printf("Example: ./a.out 127.0.0.1 3001\n");
         exit(1);
     }
 
@@ -84,9 +87,9 @@ int main(int argc, char** argv) {
     // Print information to make sure everything is ready
     struct addrinfo* p;
     for(p = servinfo; p != NULL; p = p->ai_next) {
+
         void* addr;
         char* ipver;
-        int yes = 1;
 
         // get pointer to address itself
         if(p->ai_family == AF_INET) { // ipv4
@@ -115,28 +118,99 @@ int main(int argc, char** argv) {
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
 
     // Need to bind it to a port so we can listen, port is that passed to getaddrinfo
-    bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+    if(bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
+        printf("Failed to bind\n");
+        exit(1);
+    }
 
-    // TODO: LISTEN TO SOCKET
+    // Listen on port. If listen fails, exit program
+    if(listen(sockfd, BACKLOG) < 0) {
+        printf("Failed to listen\n");
+        exit(1);
+    }
 
     // Once used, delete the linked list
     freeaddrinfo(servinfo);
 
 
     // Create and initialize array of all net_links
-    struct net_link** all_links =
-        (struct net_link**) malloc(TABLE_SIZE * sizeof(struct net_link*));
-    for(i = 0; i < TABLE_SIZE; ++i) all_links[i] = NULL;
+    // All new connections will be in this list
+    struct net_link** all_links = 
+        (struct net_link**) malloc(sizeof(struct net_link*));
+    *all_links = NULL;
+    struct net_link*  next_link = NULL;
 
     // create and initialize array of valid links sorted by host id
+    // This table is indexed by host ID.
+    // This saves pointers to net_link structs in the all_links list.
     struct net_link** table = 
         (struct net_link**) malloc(TABLE_SIZE * sizeof(struct net_link*));
     for(i = 0; i < TABLE_SIZE; ++i) table[i] = NULL;
 
-    srand(time(NULL));
+    //////////////////////////////////////////////////////////////////
 
+    srand(time(NULL));
+    int newfd;                          // Used for getting new connection fds from sockfd
+    struct sockaddr_storage their_addr; // Used to get info about new connections
+    socklen_t addr_size;                // Get more info from new connection
+
+    char buff[100 + 7]; // 100 chars + 3 for host, 3 for destination, 1 for '\0'
+    int recv_size;
+
+
+    printf("about to enter main while loop\n");
     while(1) {
-        return 0;
+
+        // TODO: Take care of hosts that disconnect.
+        // Program currently crashes when any hosts disconnect.
+
+        // Accept on non-blocking port
+        newfd = accept(sockfd, (struct sockaddr*)&their_addr, &addr_size);
+        // Add new connections to linked list of ports
+        if(newfd > 0) {
+            printf("Accepted new FD: %d\n", newfd);
+            struct net_link* newlink = 
+                (struct net_link*) malloc(sizeof(struct net_link));
+            newlink->hostfd = newfd;
+            newlink->next   = *all_links;
+            *all_links      = newlink;
+        }
+
+        // Receive any messages incoming, then forward them to hosts;
+        next_link = *all_links;
+        while(next_link != NULL) {
+            
+            recv_size = recv(next_link->hostfd, buff, 100 + 5, 0);
+            // If we received a packet, send to desired host OR send to all hosts
+            if(recv_size > 0) {
+                int src, dst;
+                char msg[100 + 1];
+                sscanf(buff, "%d %d %[^\t\n]", &src, &dst, msg);
+                printf("Received message!\n");
+                printf("From %d to %d: %s\n", src, dst, msg);
+
+                // Add to table if needed
+                if(table[src] == NULL) table[src] = next_link;
+
+                // Send to host or all if necessary
+                if(table[dst] != NULL && dst != -1) {
+                    printf("Sending message directly to host %d\n", dst);
+                    send(table[dst]->hostfd, buff, recv_size, 0);
+                }
+                else {
+                    printf("Sending message to all hosts\n");
+                    struct net_link* send_link = *all_links;
+                    while(send_link != NULL) {
+                        // TODO: Add error checking
+                        send(send_link->hostfd, buff, recv_size, 0);
+                        send_link = send_link->next;
+                    }
+                }
+            }
+            next_link = next_link->next;
+        }
+        // Sleep for 50 ms, or 50000 us
+        usleep(50000);
     }
 
     return 0;

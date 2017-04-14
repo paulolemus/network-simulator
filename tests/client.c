@@ -169,7 +169,8 @@ int main(int argc, char** argv) {
         printCount += rand() % 10;
 
         if(printCount > 500) {
-            dest = rand() % 11 - 1;
+            //dest = rand() % 11 - 1;
+            dest = -1;
             hostMsgSize = sprintf(hostMsg, 
                                   "%d %d Greetings from host %d!\n", 
                                   hostid, dest, hostid);

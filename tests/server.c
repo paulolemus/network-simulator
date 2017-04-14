@@ -40,6 +40,25 @@ struct net_link {
     struct net_link* next;
 };
 
+void remove_link(struct net_link** list, struct net_link* node) {
+    if(node == NULL)        return;
+    else if(*list == NULL) return;
+    else {
+        struct net_link* current = *list;
+        while(current != NULL       && 
+              current->next != NULL &&
+              current->next != node) current = current->next;
+        if(current == *list) {
+            free(*list);
+            *list = NULL;
+        }
+        else {
+            current->next = node->next;
+            free(node);
+        }
+    }
+}
+
 int main(int argc, char** argv) {
 
     int i, j, k;    // used for all forloops
@@ -181,8 +200,20 @@ int main(int argc, char** argv) {
         while(next_link != NULL) {
             
             recv_size = recv(next_link->hostfd, buff, 100 + 5, 0);
+            if(recv_size == 0) {
+                printf("Deleting node from table and list\n");
+                for(i = 0; i < TABLE_SIZE; ++i) {
+                    if(table[i] == next_link) {
+                        table[i] = NULL;
+                        printf("Deleted node from table index %d\n", i);
+                    }
+                }
+                remove_link(all_links, next_link);
+                next_link = NULL;
+                continue;
+            }
             // If we received a packet, send to desired host OR send to all hosts
-            if(recv_size > 0) {
+            else if(recv_size > 0) {
                 int src, dst;
                 char msg[100 + 1];
                 sscanf(buff, "%d %d %[^\t\n]", &src, &dst, msg);
@@ -190,19 +221,22 @@ int main(int argc, char** argv) {
                 printf("From %d to %d: %s\n", src, dst, msg);
 
                 // Add to table if needed
-                if(table[src] == NULL) table[src] = next_link;
+                if(table[src] == NULL) {
+                    printf("Adding user %d to table\n", src);
+                    table[src] = next_link;
+                }
 
                 // Send to host or all if necessary
                 if(table[dst] != NULL && dst != -1) {
                     printf("Sending message directly to host %d\n", dst);
-                    send(table[dst]->hostfd, buff, recv_size, 0);
+                    send(table[dst]->hostfd, buff, recv_size, MSG_NOSIGNAL);
                 }
                 else {
                     printf("Sending message to all hosts\n");
                     struct net_link* send_link = *all_links;
                     while(send_link != NULL) {
                         // TODO: Add error checking
-                        send(send_link->hostfd, buff, recv_size, 0);
+                        send(send_link->hostfd, buff, recv_size, MSG_NOSIGNAL);
                         send_link = send_link->next;
                     }
                 }

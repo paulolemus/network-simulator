@@ -127,6 +127,11 @@ void switch_main(int switch_id)
 
     struct switch_job_queue job_q;
 
+    int localRootID = switch_id;
+    int localRootDist = 0;
+    struct net_port *localParent = NULL;
+    char localPortTree[MAX_PORT_NUM];
+
     /*
      * Create an array node_port[ ] to store the network link ports
      * at the host.  The number of ports is node_port_num
@@ -158,12 +163,48 @@ void switch_main(int switch_id)
     switch_job_q_init(&job_q);
 
     while(1) {
-        /* Receive packet from a host */
+        /* Receive packet */
         for(k = 0; k < node_port_num; k++) {
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
             if(n > 0) {
-                
+                //If packet is a tree packet
+                if(in_packet->ptype == TREE) {
+			//Update localRootID, localRootDist, and localParent
+			if(in_packet->packetSenderType == 'S') {
+				if(in_packet->packetRootID < localRootID) {
+					localRootID = in_packet->packetRootID;
+					localParent = node_port[k];
+					localRootDist = 
+					  in_packet->packetRootDist + 1;
+				}
+
+				else if(in_packet->packetRootID == localRootID) {
+					if(localRootDist > 
+					  (in_packet->packetRootDist + 1)) {
+						localParent = node_port[k];
+						localRootDist = 
+						  in_packet->packetRootDist + 1;
+					}
+				}
+			}
+
+			//Update status of local port k, whether it's in the 
+			//tree or not.
+			if(in_packet->packetSenderType == 'H')
+				localPortTree[k] = 1;
+
+			else if(in_packet->packetSenderType == 'S') {
+				if(localParent == node_port[k])
+					localPortTree[k] = 1;
+				else if(in_packet->packetSenderChild == 'Y')
+					localPortTree[k] = 1;
+				else	localPortTree[k] = 0;
+			}
+
+			else	localPortTree[k] = 0;
+		}		
+
                 // Check if the src is in the table. If not, add the net_port
                 if((int)in_packet->src >= 0         &&
                    (int)in_packet->src < TABLE_SIZE &&

@@ -16,6 +16,7 @@ void packet_send(struct net_port *port, struct packet *p)
 {
     char msg[PAYLOAD_MAX+4];
     int i;
+    char choice;
 
     if (port->type == PIPE) {
         msg[0] = (char) p->src; 

@@ -11,6 +11,8 @@
  * Date Finished: 
  */
 
+#define MAX_PORT_NUM 100
+
 enum switch_job_type {
 	SWITCH_JOB_SEND_ALL_PORTS,
     SWITCH_JOB_SEND_TO_PORT

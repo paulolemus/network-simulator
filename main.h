@@ -31,21 +31,31 @@ struct net_port { /* port to communicate with another node */
 };
 
 /* Packet sent between nodes  */
+enum PacketType {
+	STANDARD,
+	TREE
+};
 
 struct packet { /* struct for a packet */
+	enum PacketType ptype;
 	char src;
 	char dst;
 	char type;
 	int length;
 	char payload[PAYLOAD_MAX];
+
+	int packetRootID;
+	int packetRootDist;
+	char packetSenderType;
+	char packetSenderChild;
 };
 
 /* Types of packets */
 
-#define PKT_PING_REQ          0
-#define PKT_PING_REPLY        1
-#define PKT_FILE_UPLOAD_START 2
-#define PKT_FILE_UPLOAD_END	  3
-#define PKT_FILE_UPLOAD_IN    4
-#define PKT_FILE_DOWNLOAD_REQ 5
+#define PKT_PING_REQ          	0
+#define PKT_PING_REPLY        	1
+#define PKT_FILE_UPLOAD_START 	2
+#define PKT_FILE_UPLOAD_END	3
+#define PKT_FILE_UPLOAD_IN    	4
+#define PKT_FILE_DOWNLOAD_REQ 	5
 

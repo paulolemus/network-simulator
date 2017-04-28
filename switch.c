@@ -170,9 +170,12 @@ void switch_main(int switch_id)
             if(n > 0) {
                 //If packet is a tree packet
                 if(in_packet->ptype == TREE) {
+			printf("Packet is a tree\n");
 			//Update localRootID, localRootDist, and localParent
 			if(in_packet->packetSenderType == 'S') {
+				printf("Packet Sender Type: S\n");
 				if(in_packet->packetRootID < localRootID) {
+					printf("packet ID < localID\n");
 					localRootID = in_packet->packetRootID;
 					localParent = node_port[k];
 					localRootDist = 
@@ -180,6 +183,7 @@ void switch_main(int switch_id)
 				}
 
 				else if(in_packet->packetRootID == localRootID) {
+					printf("packet ID = localID\n");
 					if(localRootDist > 
 					  (in_packet->packetRootDist + 1)) {
 						localParent = node_port[k];
@@ -204,6 +208,8 @@ void switch_main(int switch_id)
 
 			else	localPortTree[k] = 0;
 		}		
+		
+		else printf("Packet is NOT a tree");
 
                 // Check if the src is in the table. If not, add the net_port
                 if((int)in_packet->src >= 0         &&
@@ -218,7 +224,7 @@ void switch_main(int switch_id)
                 //			new_job->in_port_index = k;
                 //			new_job->packet = in_packet;
 
-                printf("\nSwitch received a Packet!\n");
+                printf("\nSwitch %d received a Packet!\n", switch_id);
                 printf("src: %d \n", in_packet->src);
                 printf("dst: %d \n", in_packet->dst);
                 printf("type: %d \n", in_packet->type);
@@ -237,6 +243,12 @@ void switch_main(int switch_id)
                 else {
                     printf("sending to all FDs\n");
                     for(i = 0; i < node_port_num; i++){
+			if(in_packet->ptype == TREE) {
+				in_packet->packetSenderType = 'S';
+				in_packet->packetRootID = localRootID;
+				in_packet->packetSenderChild = 'Y';
+			}
+
                         packet_send(node_port[i], in_packet);
                     }
                 }

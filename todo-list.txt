@@ -1,9 +1,2 @@
-Host.c:
-- set packet type to either "TREE" or "STANDARD"
-- set packetSenderType to 'H'
-
-Switch.c:
-- When sending the packet, if packet type = "TREE":
-	- set packetSenderType to 'S'
-	- set packetRootID = localRootID
-	- set packetSenderChild
+SWITCH2CONFIG:
+- Get the program to ping a host 2 switches away.

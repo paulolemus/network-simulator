@@ -357,6 +357,12 @@ void host_main(int host_id)
                     new_packet->src    = (char) host_id;
                     new_packet->dst    = (char) dst;
                     new_packet->type   = (char) PKT_FILE_DOWNLOAD_REQ;
+		    new_packet->ptype = TREE;
+                    new_packet->packetRootID = 1000;
+                    new_packet->packetRootDist = 0;
+                    new_packet->packetSenderType = 'H';
+                    new_packet->packetSenderChild = 'Y';
+
                     
                     // Create job to send packet
                     new_job = (struct host_job *)
@@ -481,6 +487,21 @@ void host_main(int host_id)
                         for(ii = 0; ii < new_job->packet->length; ++ii) {
                             printf("%c", new_job->packet->payload[ii]);
                         } printf("\n");
+
+/*			char choice;
+			printf("Is the packet a tree packet? (y)es or (n)o: ");
+			scanf("%c", &choice);
+
+			if(choice == 'y') {
+				new_job->packet->ptype = TREE;
+			}
+
+			else {
+				new_job->packet->ptype = STANDARD;
+			}
+*/
+			new_job->packet->packetSenderType = 'H';
+ 
                         packet_send(node_port[k], new_job->packet);
                     }
                     free(new_job->packet);
@@ -497,8 +518,27 @@ void host_main(int host_id)
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_PING_REPLY;
-                    new_packet->length = 0;
+		    new_packet->ptype = TREE;
+                    new_packet->packetRootID = 1000;
+                    new_packet->packetRootDist = 0;
+                    new_packet->packetSenderType = 'H';
+                    new_packet->packetSenderChild = 'Y';
 
+                    new_packet->length = 0;
+		    
+/*		    char choice;
+		    printf("Is the packet a tree packet? (y)es or (n)o: ");
+		    scanf("%c", &choice);
+
+		    if(choice == 'y') {
+			    new_packet->ptype = TREE;
+			    new_packet->packetSenderType = 'H';
+		    }
+
+		    else {
+			    new_packet->ptype = STANDARD;
+		    }
+*/
                     /* Create job for the ping reply */
                     new_job2 = (struct host_job *)
                         malloc(sizeof(struct host_job));
@@ -560,6 +600,11 @@ void host_main(int host_id)
                             new_packet->src = (char) host_id;
                             new_packet->type 
                                 = PKT_FILE_UPLOAD_START;
+			    new_packet->ptype = TREE;
+			    new_packet->packetRootID = 1000;
+			    new_packet->packetRootDist = 0;
+			    new_packet->packetSenderType = 'H';
+			    new_packet->packetSenderChild = 'Y';
                             for (i=0; 
                                     new_job->fname_upload[i]!= '\0'; 
                                     i++) {
@@ -567,6 +612,20 @@ void host_main(int host_id)
                                     new_job->fname_upload[i];
                             }
                             new_packet->length = i;
+
+/*			    char choice;
+	                    printf("Is the packet a tree packet? (y)es or (n)o: ");
+        	            scanf("%c", &choice);
+	
+        	            if(choice == 'y') {
+                	            new_packet->ptype = TREE;
+                        	    new_packet->packetSenderType = 'H';
+                    	    }
+
+                    	    else {
+                        	    new_packet->ptype = STANDARD;
+	                    }
+*/
 
                             /* 
                              * Create a job to send the packet
@@ -595,6 +654,11 @@ void host_main(int host_id)
                                 new_packet->dst = new_job->file_upload_dst;
                                 new_packet->src = (char) host_id;
                                 new_packet->type = PKT_FILE_UPLOAD_IN;
+				new_packet->ptype = TREE;
+                                new_packet->packetRootID = 1000;
+                                new_packet->packetRootDist = 0;
+                                new_packet->packetSenderType = 'H';
+                                new_packet->packetSenderChild = 'Y';
 
                                 for (i=0; i<n; i++) {
                                     new_packet->payload[i] = string[i];
@@ -623,12 +687,31 @@ void host_main(int host_id)
                             new_packet->dst = new_job->file_upload_dst;
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_END;
+			    new_packet->ptype = TREE;
+                            new_packet->packetRootID = 1000;
+                            new_packet->packetRootDist = 0;
+                            new_packet->packetSenderType = 'H';
+                            new_packet->packetSenderChild = 'Y';
 
                             for (i=0; i < n; i++) {
                                 new_packet->payload[i] = string[i];
                             }
                             new_packet->length = n;
 
+//			    char choice;
+/*                	    printf("Is the packet a tree packet? (y)es or (n)o: ");
+        	            scanf("%c", &choice);
+
+	                    if(choice == 'y') {
+                	            new_packet->ptype = TREE;
+        	                    new_packet->packetSenderType = 'H';
+	                    }
+
+                	    else {
+        	                    new_packet->ptype = STANDARD;
+	                    }
+	
+*/
                             new_job2 = (struct host_job *)
                                 malloc(sizeof(struct host_job));
                             new_job2->type = JOB_SEND_PKT_ALL_PORTS;

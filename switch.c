@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -27,6 +30,7 @@
 
 #define FIVEMILLISEC 5000
 #define TABLE_SIZE   100
+#define BACKLOG 10
 
 /*
  * Operations requested by the manager
@@ -82,8 +86,7 @@ struct net_port** init_table(struct net_port** list)
     struct net_port** table = (struct net_port **)
         malloc(TABLE_SIZE * sizeof(struct net_port*));
 
-    int i;
-    for(i = 0; i < TABLE_SIZE; ++i) table[i] = NULL;
+    for(int i = 0; i < TABLE_SIZE; ++i) table[i] = NULL;
 
     struct net_port* port;
     printf("PORT ITERATION HOSTS:");
@@ -95,15 +98,13 @@ struct net_port** init_table(struct net_port** list)
     printf("\nPORT ITERATION SEND:");
     for(port = list[0]; port != NULL; port = port->next) {
         if(port->type == PIPE) printf("%d ", port->pipe_send_fd);
-        // TODO:: SOCKET SHIZ
-        //else                   printf("%d ", port->sock_send_fd);
+        else printf("%s %s ", port->connect_addr, port->connect_port);
     }
     // Hosts send to these FDs for switch to receive
     printf("\nPORT ITERATION RECV:");
     for(port = list[0]; port != NULL; port = port->next) {
         if(port->type == PIPE) printf("%d ", port->pipe_recv_fd);
-        // TODO:: SOCK SHIZ
-        //else                   printf("%d ", port->sock_recv_fd);
+        else printf("%s %s ", port->listen_addr, port->listen_port);
     } printf("\n");
     return table;
 }
@@ -115,7 +116,6 @@ void switch_main(int switch_id)
     struct net_port *node_port_list;
     struct net_port **node_port;	//Array of Pointers to Node Ports
     int node_port_num;		//Number of node ports
-
 
     int i, k, n;
     int dst;
@@ -140,11 +140,8 @@ void switch_main(int switch_id)
     for (p=node_port_list; p!=NULL; p=p->next) {
         node_port_num++;
     }
-//    printf("\nSwitch node_port_num: %d\n", node_port_num);
     /* Create memory space for the array */
-    node_port = (struct net_port **)
-        malloc(node_port_num*sizeof(struct net_port *));
-
+    node_port = (struct net_port **) malloc(node_port_num*sizeof(struct net_port *));
     /* Load ports into the array */
     p = node_port_list;
     for (k = 0; k < node_port_num; k++) {
@@ -155,6 +152,58 @@ void switch_main(int switch_id)
     // Create an array of pointers to net_port structs,
     // with host id as the index
     struct net_port** table = init_table(node_port);
+
+    //////////////////////////////
+    // FD STUFF - WE LISTEN TO ONE PORT
+    int listenfd = -1, newfd = -1;
+
+    p = node_port_list;
+    while(p && p->type != SOCKET) p = p->next;
+    if(p && p->type == SOCKET) {
+        struct addrinfo hints;
+        struct addrinfo* servinfo;
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family   = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        if((getaddrinfo(p->listen_addr, p->listen_port, &hints, &servinfo)) != 0) {
+            printf("socket getaddrinfo failed\n");
+            exit(1);
+        }
+        int yes = 1;
+        struct addrinfo* cp;
+        for(cp = servinfo; cp != NULL; cp = cp->ai_next) {
+            if((listenfd = socket(cp->ai_family, 
+                                  cp->ai_socktype, 
+                                  cp->ai_protocol)) < 0) {
+                continue;
+            }
+            fcntl(listenfd, F_SETFL, O_NONBLOCK);
+            if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
+                exit(1);
+            }
+            if(bind(listenfd, cp->ai_addr, cp->ai_addrlen) < 0) {
+                close(listenfd);
+                continue;
+            }
+            break;
+        }
+        if(cp == NULL) {
+            printf("FAILED TO BIND TO PORT IN SWITCH\n");
+            exit(1);
+        }
+        freeaddrinfo(servinfo);
+        if(listen(listenfd, BACKLOG) < 0) {
+            printf("socket listen failed\n");
+            exit(1);
+        }
+        while(p) {
+            if(p->type == SOCKET) {
+                p->sock_recv_fd = listenfd;
+            }
+            p = p->next;
+        }
+    }
+    ////////////////////////////////////
 
     /* Initialize the job queue */
     switch_job_q_init(&job_q);
@@ -206,13 +255,10 @@ void switch_main(int switch_id)
             free(in_packet);
         } // for loop - receive packets
 
-
         // Execute one job in queue
         if(switch_job_q_num(&job_q) > 0) {
 
-
         }
-
         usleep(FIVEMILLISEC);
     } /* End while loop */
 }

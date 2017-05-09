@@ -304,7 +304,7 @@ void host_main(int host_id)
         }
         int yes = 1;
         struct addrinfo* cp;
-        for(cp = servinfo; p != NULL; cp->ai_next) {
+        for(cp = servinfo; cp != NULL; cp = cp->ai_next) {
             if((listenfd = socket(cp->ai_family, cp->ai_socktype, cp->ai_protocol)) 
                 < 0) {
                 continue;
@@ -314,7 +314,7 @@ void host_main(int host_id)
                 < 0) {
                 exit(1);
             }
-            if(bind(listenfd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
+            if(bind(listenfd, cp->ai_addr, cp->ai_addrlen) < 0) {
                 close(listenfd);
                 continue;
             }

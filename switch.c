@@ -95,13 +95,15 @@ struct net_port** init_table(struct net_port** list)
     printf("\nPORT ITERATION SEND:");
     for(port = list[0]; port != NULL; port = port->next) {
         if(port->type == PIPE) printf("%d ", port->pipe_send_fd);
-        else                   printf("%d ", port->sock_send_fd);
+        // TODO:: SOCKET SHIZ
+        //else                   printf("%d ", port->sock_send_fd);
     }
     // Hosts send to these FDs for switch to receive
     printf("\nPORT ITERATION RECV:");
     for(port = list[0]; port != NULL; port = port->next) {
         if(port->type == PIPE) printf("%d ", port->pipe_recv_fd);
-        else                   printf("%d ", port->sock_recv_fd);
+        // TODO:: SOCK SHIZ
+        //else                   printf("%d ", port->sock_recv_fd);
     } printf("\n");
     return table;
 }

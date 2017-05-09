@@ -269,6 +269,7 @@ void host_main(int host_id)
     for (p=node_port_list; p!=NULL; p=p->next) {
         node_port_num++;
     }
+    printf("Host %d, portList: %d\n", host_id, node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **) 
         malloc(node_port_num*sizeof(struct net_port *));

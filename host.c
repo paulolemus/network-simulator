@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -22,6 +27,7 @@
 #define MAX_FILE_NAME 100
 #define PKT_PAYLOAD_MAX 100
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
+#define BACKLOG 10
 
 /* Types of packets */
 
@@ -255,7 +261,6 @@ void host_main(int host_id)
      * Initialize pipes 
      * Get link port to the manager
      */
-
     man_port = net_get_host_port(host_id);
 
     /*
@@ -269,7 +274,7 @@ void host_main(int host_id)
     for (p=node_port_list; p!=NULL; p=p->next) {
         node_port_num++;
     }
-    printf("Host %d, portList: %d\n", host_id, node_port_num);
+    printf("host %d portnum %d\n", host_id, node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **) 
         malloc(node_port_num*sizeof(struct net_port *));
@@ -279,7 +284,53 @@ void host_main(int host_id)
     for (k = 0; k < node_port_num; k++) {
         node_port[k] = p;
         p = p->next;
-    }	
+    }
+
+    /////////////////////////
+    // FD stuff
+    int listenfd = -1, newfd = -1;
+
+    p = node_port_list;
+    while(p && p->type != SOCKET) p = p->next;
+    if(p && p->type == SOCKET) {
+        struct addrinfo hints;
+        struct addrinfo* servinfo;
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family   = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        if((getaddrinfo(p->listen_addr, p->listen_port, &hints, &servinfo)) != 0) {
+            printf("Getaddrinfo failed!\n");
+            exit(1);
+        }
+        int yes = 1;
+        struct addrinfo* cp;
+        for(cp = servinfo; p != NULL; cp->ai_next) {
+            if((listenfd = socket(cp->ai_family, cp->ai_socktype, cp->ai_protocol)) 
+                < 0) {
+                continue;
+            }
+            fcntl(listenfd, F_SETFL, O_NONBLOCK);
+            if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))
+                < 0) {
+                exit(1);
+            }
+            if(bind(listenfd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
+                close(listenfd);
+                continue;
+            }
+            break;
+        }
+        if(cp == NULL) {
+            printf("FAILED TO BIND TO PORT/SOCKET\n");
+            exit(1);
+        }
+        freeaddrinfo(servinfo);
+        if(listen(listenfd, BACKLOG) < 0) {
+            printf("listen failed\n");
+            exit(1);
+        }
+    }
+    /////////////////////////
 
     /* Initialize the job queue */
     job_q_init(&job_q);
@@ -368,16 +419,21 @@ void host_main(int host_id)
                     job_q_add(&job_q, new_job);
                     
                     break;
-                default:
-                    ;
+                default:;
             }
         }
+
+
+        /* GET PACKETS BUT FOR SOCKETS
+         * This is the same as below, however we accept any incoming
+         * connections and then read any incoming packets.
+         */
+
 
         /*
          * Get packets from incoming links and translate to jobs
          * Put jobs in job queue
          */
-
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
 
             in_packet = (struct packet *) malloc(sizeof(struct packet));

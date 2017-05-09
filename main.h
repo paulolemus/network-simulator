@@ -26,6 +26,7 @@ struct net_port { /* port to communicate with another node */
 	int pipe_send_fd;
 	int pipe_recv_fd;
 
+    int sock_recv_fd;
     char listen_addr[NAME_LENGTH];
     char listen_port[10];
     char connect_addr[NAME_LENGTH];

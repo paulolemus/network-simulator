@@ -329,6 +329,7 @@ void host_main(int host_id)
             printf("listen failed\n");
             exit(1);
         }
+        p->sock_recv_fd = listenfd;
     }
     /////////////////////////
 

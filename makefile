@@ -22,5 +22,5 @@ switch.o: switch.c
 	gcc -c switch.c
 
 clean:
-	rm *.o
+	rm *.o net367
 

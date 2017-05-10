@@ -218,11 +218,13 @@ void switch_main(int switch_id)
             if(n > 0) {
                 
                 // TODO: Determine where a packet came from if it came from a socket
-
+                if(node_port[k]->type == SOCKET) {
+                    if(their_addr != NULL) free(their_addr);
+                }
                 // Check if the src is in the table. If not, add the net_port
-                if((int)in_packet->src >= 0         &&
-                   (int)in_packet->src < TABLE_SIZE &&
-                    table[in_packet->src] == NULL) {
+                else if((int)in_packet->src >= 0         &&
+                        (int)in_packet->src < TABLE_SIZE &&
+                        table[in_packet->src] == NULL) {
 
                     table[in_packet->src] = node_port[k];
                 }
@@ -249,7 +251,6 @@ void switch_main(int switch_id)
                         packet_send(node_port[i], in_packet);
                     }
                 }
-
             }
             free(in_packet);
         } // for loop - receive packets

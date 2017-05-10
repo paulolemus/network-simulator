@@ -145,3 +145,62 @@ int packet_recv(struct net_port *port, struct packet *p)
 }
 
 
+int switch_packet_recv(struct net_port *port, struct packet *p,
+                       struct sockaddr_storage** addr, socklen_t* addr_size)
+{
+    char msg[PAYLOAD_MAX+4];
+    int n;
+    int i;
+
+    if (port->type == PIPE) {
+        n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX+4);
+        if (n>0) {
+            p->src    = (char) msg[0];
+            p->dst    = (char) msg[1];
+            p->type   = (char) msg[2];
+            p->length = (int) msg[3];
+            for (i=0; i<p->length; i++) {
+                p->payload[i] = msg[i+4];
+            }
+
+            printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n", 
+             	(int) msg[0], 
+             	(int) msg[1], 
+             	(int) p->src, 
+             	(int) p->dst);
+        }
+    }
+
+    else if(port->type == SOCKET) {
+
+        // connect to incoming connections
+        *addr = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage));
+        int newfd = accept(port->sock_recv_fd, (struct sockaddr*)*addr, addr_size);
+
+        if(newfd > 0) {
+            fcntl(newfd, F_SETFL, O_NONBLOCK);
+            n = recv(newfd, msg, PAYLOAD_MAX + 4, 0);
+            if(n > 0) {
+                p->src    = (char) msg[0];
+                p->dst    = (char) msg[1];
+                p->type   = (char) msg[2];
+                p->length = (int) msg[3];
+                for (i = 0; i < p->length; i++) {
+                    p->payload[i] = msg[i + 4];
+                }
+                printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n", 
+                        (int) msg[0], 
+                        (int) msg[1], 
+                        (int) p->src, 
+                        (int) p->dst);
+            }
+        }
+        else {
+            free(*addr);
+            *addr = NULL;
+        }
+    }
+    return n;
+}
+
+

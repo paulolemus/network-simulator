@@ -212,9 +212,13 @@ void switch_main(int switch_id)
         /* Receive packet from a host */
         for(k = 0; k < node_port_num; k++) {
             in_packet = (struct packet *) malloc(sizeof(struct packet));
-            n = packet_recv(node_port[k], in_packet);
+            struct sockaddr_storage* their_addr = NULL;
+            socklen_t addr_size;
+            n = switch_packet_recv(node_port[k], in_packet, &their_addr, &addr_size);
             if(n > 0) {
                 
+                // TODO: Determine where a packet came from if it came from a socket
+
                 // Check if the src is in the table. If not, add the net_port
                 if((int)in_packet->src >= 0         &&
                    (int)in_packet->src < TABLE_SIZE &&
@@ -222,11 +226,6 @@ void switch_main(int switch_id)
 
                     table[in_packet->src] = node_port[k];
                 }
-
-                //			new_job = (struct switch_job *)
-                //				malloc(sizeof(struct switch_job));
-                //			new_job->in_port_index = k;
-                //			new_job->packet = in_packet;
 
                 printf("\nSwitch received a Packet!\n");
                 printf("src: %d \n", in_packet->src);

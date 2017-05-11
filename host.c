@@ -363,7 +363,7 @@ void host_main(int host_id)
                 case 'p': // Sending ping request
                     // Create new ping request packet
                     sscanf(man_msg, "%d", &dst);
-                    new_packet = (struct packet *) 
+                    new_packet = (struct packet *)
                         malloc(sizeof(struct packet));	
                     new_packet->src = (char) host_id;
                     new_packet->dst = (char) dst;
@@ -419,6 +419,28 @@ void host_main(int host_id)
                     new_job->packet = new_packet;
                     job_q_add(&job_q, new_job);
                     
+                    break;
+                case 'r':
+                    sscanf(man_msg, "%s", name);
+                    // Create new packet
+                    new_packet = (struct packet *)
+                        malloc(sizeof(struct packet));
+                    new_packet->payload[0] = 'r';
+                    new_packet->payload[1] = ' ';
+                    for(i = 0; name[i] != '\0'; ++i) {
+                        new_packet->payload[i + 2] = name[i];
+                    }
+                    new_packet->src  = (char) host_id;
+                    new_packet->dst  = (char) 100;
+                    new_packet->type = PKT_DNS_REGISTER;
+                    new_packet->length = i + 2;
+
+                    new_job = (struct host_job *)
+                        malloc(sizeof(struct host_job));
+                    
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job->packet = new_packet;
+                    job_q_add(&job_q, new_job);
                     break;
                 default:;
             }

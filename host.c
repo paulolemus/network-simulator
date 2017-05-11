@@ -851,10 +851,29 @@ void host_main(int host_id)
                     /* Wait for a ping reply packet */
 
                     if(dns_reply_received == 1) {
-                        struct packet* jobs_packet = new_job->packet;
-                        switch(jobs_packet->type) {
+                        struct packet* dns_packet = new_job->packet;
+                        dns_host_id = -1;
+                        sscanf(dns_packet->payload, "%d", &dns_host_id);
+
+                        switch(dns_packet->type) {
                             case (char) PKT_PING_REPLY:
-                                
+                                new_packet = (struct packet *)
+                                    malloc(sizeof(struct packet));	
+                                new_packet->src  = (char) host_id;
+                                new_packet->dst  = dns_host_id;
+                                new_packet->type = (char) PKT_PING_REQ;
+                                new_packet->length = 0;
+                                new_job = (struct host_job *) 
+                                    malloc(sizeof(struct host_job));
+                                new_job->packet = new_packet;
+                                new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                                job_q_add(&job_q, new_job);
+
+                                new_job2 = (struct host_job *) 
+                                    malloc(sizeof(struct host_job));
+                                new_job2->type = JOB_PING_WAIT_FOR_REPLY;
+                                new_job2->ping_timer = 10;
+                                job_q_add(&job_q, new_job2);
                                 break;
                             default:;
                         }

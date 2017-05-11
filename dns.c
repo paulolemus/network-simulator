@@ -100,6 +100,8 @@ void dns_main(int dns_id)
 
     struct dns_job_queue job_q;
 
+    int ping_reply_received;
+
     /*
      * Create an array node_port[ ] to store the network link ports
      * at the host.  The number of ports is node_port_num
@@ -177,7 +179,7 @@ void dns_main(int dns_id)
 
     while(1) {
         /* Receive packet from a host */
-        for(k = 0; k < node_port_num; k++) {
+/*        for(k = 0; k < node_port_num; k++) {
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             struct sockaddr_storage* their_addr = NULL;
             socklen_t addr_size;
@@ -215,13 +217,15 @@ void dns_main(int dns_id)
             }
             free(in_packet);
         } // for loop - receive packets
+*/
 
+	struct dns_list* domNam;
 	//Put Jobs in Job Queue
 	for (k = 0; k < node_port_num; k++) {
 		in_packet = (struct packet*) malloc(sizeof(struct packet));
 		n = packet_recv(node_port[k], in_packet);
 
-		if((n > 0) && ((int) in_packet->dst == dst_id)) {
+		if((n > 0) && ((int) in_packet->dst == dns_id)) {
 			new_job = (struct dns_job*)
 				malloc(sizeof(struct dns_job));
 			new_job->in_port_index = k;
@@ -229,14 +233,24 @@ void dns_main(int dns_id)
 
 			switch(in_packet->type) {
 			case (char) PKT_PING_REQ:
-				new_job->type = JOB_PING_SEND_REPLY;
-				job_q_add(&job_q, new_job);
+				new_job->type = DNS_JOB_PING_SEND_REPLY;
+				dns_job_q_add(&job_q, new_job);
 				break;
 
 			case (char) PKT_PING_REPLY:
 				ping_reply_received = 1;
 				free(in_packet);
 				free(new_job);
+				break;
+
+			case (char) PKT_DNS_REGISTER:
+				domNam->host_id = in_packet->src;
+				for(i = 0; i < 100; i++) {
+				domNam->domain[i] = in_packet->payload[i];
+				}
+				break;
+
+			case (char) PKT_DNS_LOOKUP:
 				break;
 			
 			default:
@@ -246,13 +260,32 @@ void dns_main(int dns_id)
 		}
 
 		else	free(in_packet);
+	}
 
         // Execute one job in queue
         if(dns_job_q_num(&job_q) > 0) {
-		new_job = job_q_remove(&job_q);
+		new_job = dns_job_q_remove(&job_q);
 
 		switch(new_job->type) {
-		case JOB_PING_SEND_REPLY:
+                case DNS_JOB_SEND_PKT_ALL_PORTS:
+                    for (k=0; k<node_port_num; k++) {
+                        printf("\nDNS %d sending packet:\n", dns_id);
+                        printf("src: %d\n", new_job->packet->src);
+                        printf("dst: %d\n", new_job->packet->dst);
+                        printf("type: %d\n", new_job->packet->type);
+                        printf("length: %d\n", new_job->packet->length);
+                        printf("payload: ");
+                        int ii;
+                        for(ii = 0; ii < new_job->packet->length; ++ii) {
+                            printf("%c", new_job->packet->payload[ii]);
+                        } printf("\n");
+                        packet_send(node_port[k], new_job->packet);
+                    }
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+
+		case DNS_JOB_PING_SEND_REPLY:
 			new_packet = (struct packet* )
 				malloc(sizeof(struct packet));
 			new_packet->dst = new_job->packet->src;
@@ -262,6 +295,16 @@ void dns_main(int dns_id)
 
 			new_job2 = (struct dns_job *)
 				malloc(sizeof(struct dns_job));
+			new_job2->type = DNS_JOB_SEND_PKT_ALL_PORTS;
+			new_job2->packet = new_packet;
+
+			dns_job_q_add(&job_q, new_job2);
+
+			free(new_job->packet);
+			free(new_job);
+			break;
+		}
+
         }
         usleep(FIVEMILLISEC);
     } /* End while loop */

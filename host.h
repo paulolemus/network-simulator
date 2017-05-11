@@ -15,7 +15,7 @@ enum host_job_type {
 
 struct host_job {
 	enum host_job_type type;
-	struct packet *packet;
+	struct packet* packet;
 	int in_port_index;
 	int out_port_index;
 	char fname_download[100];

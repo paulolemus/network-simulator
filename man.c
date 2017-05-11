@@ -47,6 +47,7 @@ char man_get_user_cmd(int curr_host)
         printf("   (p) Ping a host\n");
         printf("   (u) Upload a file to a host\n");
         printf("   (d) Download a file from a host\n");
+        printf("   (r) Register a domain name\n");
         printf("   (q) Quit\n");
         printf("   Enter Command: ");
         do {
@@ -63,9 +64,10 @@ char man_get_user_cmd(int curr_host)
             case 'p':
             case 'u':
             case 'd':
+            case 'r':
             case 'q': return cmd;
             default: 
-                      printf("Invalid: you entered %c\n\n", cmd);
+                printf("Invalid: you entered %c\n\n", cmd);
         }
     }
 }
@@ -93,7 +95,7 @@ void change_host(struct man_port_at_man *list,
 
 /* Display the hosts on the consosle */
 void display_host(struct man_port_at_man *list, 
-        struct man_port_at_man *curr_host)
+                  struct man_port_at_man *curr_host)
 {
     struct man_port_at_man *p;
 
@@ -238,6 +240,22 @@ int file_download(struct man_port_at_man* curr_host)
     usleep(TENMILLISEC);
 }
 
+int reg_domain(struct man_port_at_man* curr_host) 
+{
+    int n;
+    int host_id;
+    char name[NAME_LENGTH];
+    char msg[NAME_LENGTH];
+
+    printf("Enter domain name to register: ");
+    scanf("%s", name);
+    printf("\n");
+
+    n = sprintf(msg, "r %s", name);
+    write(curr_host->send_fd, msg, n);
+    usleep(TENMILLISEC);
+}
+
 
 /***************************** 
  * Main loop of the manager  *
@@ -281,8 +299,10 @@ void man_main()
                 file_upload(curr_host);
                 break;
             case 'd': /* Download a file from a host */
-                printf("Entered Download switch case\n");
                 file_download(curr_host);
+                break;
+            case 'r':
+                reg_domain(curr_host);
                 break;
             case 'q':  /* Quit */
                 return;

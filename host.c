@@ -370,13 +370,17 @@ void host_main(int host_id)
                     dns_host_id         = -1;
                     valid_scan = sscanf(man_msg, "%d", &dst);
                     if(!valid_scan) {
-                        sscanf(man_msg, "%s", name);
+                        valid_scan = sscanf(man_msg, "%s", name);
                         new_packet = (struct packet *)
                             malloc(sizeof(struct packet));	
                         new_packet->src  = (char) host_id;
                         new_packet->dst  = (char) 100;
                         new_packet->type = (char) PKT_DNS_LOOKUP;
-                        new_packet->length = 0;
+                        for(i = 0; name[i] != '\0'; ++i) {
+                            new_packet->payload[i] = name[i];
+                        }
+                        new_packet->length = i;
+
                         new_job = (struct host_job *) 
                             malloc(sizeof(struct host_job));
                         new_job->packet = new_packet;
@@ -389,7 +393,7 @@ void host_main(int host_id)
                         new_job2 = (struct host_job *) 
                             malloc(sizeof(struct host_job));
                         new_job2->type   = JOB_DNS_RESPONSE;
-                        new_job2->ping_timer = 10;
+                        new_job2->ping_timer = 100;
                         new_job2->packet = new_packet;
                         job_q_add(&job_q, new_job2);
 
@@ -517,8 +521,10 @@ void host_main(int host_id)
                         break;
 
                     case (char) PKT_DNS_RESPONSE:
+                        printf("Host %d received dns response\n", host_id);
                         dns_reply_received = 1;
                         dns_host_id = -1;
+                        in_packet->payload[in_packet->length] = '\0';
                         sscanf(in_packet->payload, "%d", &dns_host_id);
                         free(in_packet);
                         free(new_job);
@@ -849,11 +855,8 @@ void host_main(int host_id)
                     /* Wait for a ping reply packet */
 
                     if(dns_reply_received == 1) {
-                        struct packet* dns_packet = new_job->packet;
-                        dns_host_id = -1;
-                        sscanf(dns_packet->payload, "%d", &dns_host_id);
 
-                        switch(dns_packet->type) {
+                        switch(new_job->packet->type) {
                             case (char) PKT_PING_REPLY:
                                 new_packet = (struct packet *)
                                     malloc(sizeof(struct packet));	

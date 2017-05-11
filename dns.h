@@ -15,7 +15,6 @@ struct dns_job {
 	char fname_download[100];
 	char fname_upload[100];
 	int ping_timer;
-	int file_upload_dst;
 	struct dns_job *next;
 };
 

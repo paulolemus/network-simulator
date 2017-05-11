@@ -248,9 +248,20 @@ void dns_main(int dns_id)
 				for(i = 0; i < 100; i++) {
 				domNam->domain[i] = in_packet->payload[i];
 				}
+				printf("Domain Name Registered!\n");
 				break;
 
 			case (char) PKT_DNS_LOOKUP:
+				while(domNam != NULL) {
+					*domNam = *domNam->next;
+
+					if(in_packet->src == 
+					   domNam->host_id) {
+						printf("Domain Name of Host %d is %s.\n", domNam->host_id, domNam->domain);
+						break;
+					} 
+				}	
+				
 				break;
 			
 			default:

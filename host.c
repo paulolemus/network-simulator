@@ -457,15 +457,13 @@ void host_main(int host_id)
                     // Create new packet
                     new_packet = (struct packet *)
                         malloc(sizeof(struct packet));
-                    new_packet->payload[0] = 'r';
-                    new_packet->payload[1] = ' ';
                     for(i = 0; name[i] != '\0'; ++i) {
-                        new_packet->payload[i + 2] = name[i];
+                        new_packet->payload[i] = name[i];
                     }
                     new_packet->src  = (char) host_id;
                     new_packet->dst  = (char) 100;
                     new_packet->type = PKT_DNS_REGISTER;
-                    new_packet->length = i + 2;
+                    new_packet->length = i;
 
                     new_job = (struct host_job *)
                         malloc(sizeof(struct host_job));

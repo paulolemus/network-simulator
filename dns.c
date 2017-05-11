@@ -177,55 +177,31 @@ void dns_main(int dns_id)
     /* Initialize the job queue */
     dns_job_q_init(&job_q);
 
+    // DOMAIN LIST STUFF
+    struct dns_list* domain_list = NULL;
+    struct dns_list* curr_node   = NULL;
+    int found_in_list;
+    char domain_name_sp[100];
+    int found_host_id;
+
     while(1) {
-        /* Receive packet from a host */
-/*        for(k = 0; k < node_port_num; k++) {
-            in_packet = (struct packet *) malloc(sizeof(struct packet));
-            struct sockaddr_storage* their_addr = NULL;
-            socklen_t addr_size;
-            n = packet_recv(node_port[k], in_packet);
-            if(n > 0) {
-                
-                // TODO: Determine where a packet came from if it came from a socket
-                if(node_port[k]->type == SOCKET) {
-                    if(their_addr != NULL) free(their_addr);
-                }
-                // Check if the src is in the table. If not, add the net_port
 
-                printf("\ndns received a Packet!\n");
-                printf("src: %d \n", in_packet->src);
-                printf("dst: %d \n", in_packet->dst);
-                printf("type: %d \n", in_packet->type);
-                printf("length: %d \n", in_packet->length);
-                printf("payload: ");
-                for(i = 0; i < in_packet->length; ++i) {
-                    printf("%c", in_packet->payload[i]);
-                } printf("\n");
-
-                
-                // Check table to see if we have the dest FD
-                if(table[in_packet->dst] != NULL) {
-                    printf("Sending to specific FD\n");
-                    packet_send(table[in_packet->dst], in_packet);
-                }
-                else {
-                    printf("sending to all FDs\n");
-                    for(i = 0; i < node_port_num; i++){
-                        packet_send(node_port[i], in_packet);
-                    }
-                }
-            }
-            free(in_packet);
-        } // for loop - receive packets
-*/
-
-	struct dns_list* domNam;
 	//Put Jobs in Job Queue
 	for (k = 0; k < node_port_num; k++) {
 		in_packet = (struct packet*) malloc(sizeof(struct packet));
 		n = packet_recv(node_port[k], in_packet);
 
+
 		if((n > 0) && ((int) in_packet->dst == dns_id)) {
+            printf("DNS received packet\n");
+            printf("src: %d\n", in_packet->src);
+            printf("dst: %d\n", in_packet->dst);
+            printf("type: %d\n", in_packet->type);
+            printf("src: %d\n", in_packet->length);
+            for(int jj = 0; jj < in_packet->length; ++jj) {
+                printf("%c", in_packet->payload[jj]);
+            }
+            printf("\n");
 			new_job = (struct dns_job*)
 				malloc(sizeof(struct dns_job));
 			new_job->in_port_index = k;
@@ -244,24 +220,44 @@ void dns_main(int dns_id)
 				break;
 
 			case (char) PKT_DNS_REGISTER:
-				domNam->host_id = in_packet->src;
-				for(i = 0; i < 100; i++) {
-				domNam->domain[i] = in_packet->payload[i];
-				}
-				printf("Domain Name Registered!\n");
+    
+                curr_node = (struct dns_list*)malloc(sizeof(struct dns_list));
+                curr_node->host_id = in_packet->src;
+                for(int jj = 0; jj < in_packet->length; ++jj) {
+                    curr_node->domain[jj] = in_packet->payload[jj];
+                }
+                curr_node->domain[in_packet->length] = '\0';
+                curr_node->next = domain_list;
+                domain_list = curr_node;
+                printf("Registered your domain!\n");
 				break;
 
 			case (char) PKT_DNS_LOOKUP:
-				while(domNam != NULL) {
-					*domNam = *domNam->next;
-
-					if(in_packet->src == 
-					   domNam->host_id) {
-						printf("Domain Name of Host %d is %s.\n", domNam->host_id, domNam->domain);
-						break;
-					} 
-				}	
-				
+                // Find name then send a message to source
+                // with the corresponding host id;
+                found_host_id = -1;
+                for(int jj = 0; jj < in_packet->length; ++jj) {
+                    domain_name_sp[jj] = in_packet->payload[jj];
+                }
+                domain_name_sp[in_packet->length] = '\0';
+                curr_node = domain_list;
+                while(curr_node && found_host_id < 0) {
+                    if(strcmp(domain_name_sp, curr_node->domain) == 0) {
+                        found_host_id = curr_node->host_id;
+                    }
+                    curr_node = curr_node->next;
+                }
+                in_packet->dst = in_packet->src;
+                in_packet->src = (char) 100;
+                in_packet->length = 1;
+                in_packet->payload[0] = (char) 1; //found_host_id
+                printf("DNS SENDING\n");
+                printf("src: %d\n", in_packet->src);
+                printf("dst: %d\n", in_packet->dst);
+                printf("type: %d\n", in_packet->type);
+                printf("length: %d\n", in_packet->length);
+                printf("content: %c\n", in_packet->payload[0]);
+                packet_send(node_port_list, in_packet);
 				break;
 			
 			default:

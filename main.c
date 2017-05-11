@@ -19,8 +19,6 @@ void main()
 {
 
     pid_t pid;  /* Process id */
-    int k=0;
-    int status;
     struct net_node *node_list;
     struct net_node *p_node;
 
@@ -31,7 +29,6 @@ void main()
      */
     net_init();  
     node_list = net_get_node_list(); /* Returns the list of nodes */
-
 
     /* Create nodes, which are child processes */ 
 
@@ -47,7 +44,7 @@ void main()
             if (p_node->type == HOST) {  /* Execute host routine */
                 host_main(p_node->id);
             }
-            else if (p_node->type = SWITCH) {
+            else if (p_node->type == SWITCH) {
                 switch_main(p_node->id); 
             }
             else if (p_node->type == DNS) {

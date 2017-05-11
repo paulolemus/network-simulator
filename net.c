@@ -515,25 +515,31 @@ int load_net_data_file()
     }
     else { 
         g_net_node =(struct net_node*) malloc(sizeof(struct net_node)*node_num);
-        for (i=0; i<node_num; i++) { 
+        for (i = 0; i < node_num; ++i) { 
             fscanf(fp, " %c ", &node_type);
 
             if (node_type == 'H') {
                 fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = HOST;
-                g_net_node[i].id = node_id;
+                g_net_node[i].id   = node_id;
             }
             // Added this else if statement
             else if (node_type == 'S') {
                 fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = SWITCH;
-                g_net_node[i].id = node_id;
+                g_net_node[i].id   = node_id;
+            }
+            // Added this for the DNS server
+            else if(node_type == 'D') {
+                fscanf(fp, " %d ", &node_id);
+                g_net_node[i].type = DNS;
+                g_net_node[i].id   = node_id;
             }
             else {
                 printf(" net.c: Unidentified Node Type\n");
             }
 
-            if (i != node_id) {
+            if (g_net_node[i].id != 100 && i != node_id) {
                 printf(" net.c: Incorrect node id\n");
                 fclose(fp);
                 return(0);
@@ -570,7 +576,7 @@ int load_net_data_file()
     }
     else {
         g_net_link =(struct net_link*) malloc(sizeof(struct net_link)*link_num);
-        for (i=0; i<link_num; i++) {
+        for (i = 0; i < link_num; ++i) {
             fscanf(fp, " %c ", &link_type);
             if (link_type == 'P') {
                 fscanf(fp," %d %d ", &node0, &node1);
@@ -606,6 +612,9 @@ int load_net_data_file()
         else if (g_net_node[i].type == SWITCH) {
             printf("   Node %d SWITCH\n", g_net_node[i].id);
         }
+        else if (g_net_node[i].type == DNS) {
+            printf("   Node %d DNS\n", g_net_node[i].id);
+        }
         else {
             printf(" Unknown Type\n");
         }
@@ -629,6 +638,4 @@ int load_net_data_file()
     fclose(fp);
     return(1);
 }
-
-
 

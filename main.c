@@ -12,6 +12,7 @@
 #include "man.h"
 #include "host.h"
 #include "switch.h"
+#include "dns.h"
 
 
 void main()
@@ -47,18 +48,20 @@ void main()
                 host_main(p_node->id);
             }
             else if (p_node->type = SWITCH) {
-                /* Execute switch routine, which you have to write */
                 switch_main(p_node->id); 
             }
+            else if (p_node->type == DNS) {
+                printf("created DNS with id: %d\n", p_node->id);
+                dns_main(p_node->id);
+            }
             return;
-        }  
+        }
     }
 
     /* 
      * Parent process: Execute manager routine. 
      */
     man_main();
-
 
     /* 
      * We reach here if the user quits the manager.

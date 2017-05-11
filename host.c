@@ -411,7 +411,7 @@ void host_main(int host_id)
                     new_packet->dst    = (char) dst;
                     new_packet->type   = (char) PKT_FILE_DOWNLOAD_REQ;
 		    new_packet->ptype = TREE;
-                    new_packet->packetRootID = 1000;
+                    new_packet->packetRootID = 100;
                     new_packet->packetRootDist = 0;
                     new_packet->packetSenderType = 'H';
                     new_packet->packetSenderChild = 'Y';
@@ -577,7 +577,7 @@ void host_main(int host_id)
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_PING_REPLY;
 		    new_packet->ptype = TREE;
-                    new_packet->packetRootID = 1000;
+                    new_packet->packetRootID = 100;
                     new_packet->packetRootDist = 0;
                     new_packet->packetSenderType = 'H';
                     new_packet->packetSenderChild = 'Y';
@@ -659,7 +659,7 @@ void host_main(int host_id)
                             new_packet->type 
                                 = PKT_FILE_UPLOAD_START;
 			    new_packet->ptype = TREE;
-			    new_packet->packetRootID = 1000;
+			    new_packet->packetRootID = 100;
 			    new_packet->packetRootDist = 0;
 			    new_packet->packetSenderType = 'H';
 			    new_packet->packetSenderChild = 'Y';
@@ -713,7 +713,7 @@ void host_main(int host_id)
                                 new_packet->src = (char) host_id;
                                 new_packet->type = PKT_FILE_UPLOAD_IN;
 				new_packet->ptype = TREE;
-                                new_packet->packetRootID = 1000;
+                                new_packet->packetRootID = 100;
                                 new_packet->packetRootDist = 0;
                                 new_packet->packetSenderType = 'H';
                                 new_packet->packetSenderChild = 'Y';
@@ -746,7 +746,7 @@ void host_main(int host_id)
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_END;
 			    new_packet->ptype = TREE;
-                            new_packet->packetRootID = 1000;
+                            new_packet->packetRootID = 100;
                             new_packet->packetRootDist = 0;
                             new_packet->packetSenderType = 'H';
                             new_packet->packetSenderChild = 'Y';

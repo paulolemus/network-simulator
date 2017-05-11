@@ -232,7 +232,7 @@ void switch_main(int switch_id)
 				if(in_packet->packetRootID < localRootID) {
 					printf("packet ID < localID\n");
 					localRootID = in_packet->packetRootID;
-					localParent = node_port[k];
+					localParent = node_port[k-1];
 					localRootDist = 
 					  in_packet->packetRootDist + 1;
 				}
@@ -241,7 +241,7 @@ void switch_main(int switch_id)
 					printf("packet ID = localID\n");
 					if(localRootDist > 
 					  (in_packet->packetRootDist + 1)) {
-						localParent = node_port[k];
+						localParent = node_port[k-1];
 						localRootDist = 
 						  in_packet->packetRootDist + 1;
 					}

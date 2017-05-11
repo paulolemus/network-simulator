@@ -13,3 +13,5 @@ Included :
 	with just two host nodes connected by a link (pipe).
 
 
+socket.config layout
+Sockets are given a single 

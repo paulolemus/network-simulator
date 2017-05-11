@@ -166,14 +166,19 @@ void set_host_dir(struct man_port_at_man *curr_host)
 void ping(struct man_port_at_man *curr_host)
 {
     char msg[MAN_MSG_LENGTH];
+    char name[MAN_MSG_LENGTH];
     char reply[MAN_MSG_LENGTH];
-    int host_to_ping;
+    int host_to_ping = -1;
     int n;
 
-    printf("Enter id of host to ping: ");
-    scanf("%d", &host_to_ping);
-    n = sprintf(msg, "p %d", host_to_ping);
-
+    printf("Enter id/domain of host to ping: ");
+    n = scanf("%d", &host_to_ping);
+    if(n < 1) {
+        n = scanf("%s", name);
+        n = sprintf(msg, "p %s", name);
+    } else {
+        n = sprintf(msg, "p %d", host_to_ping);
+    }
     write(curr_host->send_fd, msg, n);
 
     n = 0;

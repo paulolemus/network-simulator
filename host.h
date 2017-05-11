@@ -11,7 +11,7 @@ enum host_job_type {
 	JOB_FILE_UPLOAD_RECV_START,
     JOB_FILE_UPLOAD_RECV_IN, // Added this line
 	JOB_FILE_UPLOAD_RECV_END,
-    JOB_DNS_REG_RESPONSE
+    JOB_DNS_RESPONSE
 };
 
 struct host_job {

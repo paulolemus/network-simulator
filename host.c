@@ -234,11 +234,14 @@ void host_main(int host_id)
     int node_port_num;            // Number of node ports
 
     int ping_reply_received;
+    int dns_reply_received;
+    int dns_host_id;
 
     int i, k, n;
     int dst;
     char name[MAX_FILE_NAME];
     char string[PKT_PAYLOAD_MAX+1]; 
+    int valid_scan;
 
     FILE *fp;
 
@@ -362,25 +365,54 @@ void host_main(int host_id)
 
                 case 'p': // Sending ping request
                     // Create new ping request packet
-                    sscanf(man_msg, "%d", &dst);
-                    new_packet = (struct packet *)
-                        malloc(sizeof(struct packet));	
-                    new_packet->src = (char) host_id;
-                    new_packet->dst = (char) dst;
-                    new_packet->type = (char) PKT_PING_REQ;
-                    new_packet->length = 0;
-                    new_job = (struct host_job *) 
-                        malloc(sizeof(struct host_job));
-                    new_job->packet = new_packet;
-                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
-
-                    new_job2 = (struct host_job *) 
-                        malloc(sizeof(struct host_job));
                     ping_reply_received = 0;
-                    new_job2->type = JOB_PING_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
-                    job_q_add(&job_q, new_job2);
+                    dns_reply_received  = 0;
+                    dns_host_id         = -1;
+                    valid_scan = sscanf(man_msg, "%d", &dst);
+                    if(!valid_scan) {
+                        sscanf(man_msg, "%s", name);
+                        new_packet = (struct packet *)
+                            malloc(sizeof(struct packet));	
+                        new_packet->src  = (char) host_id;
+                        new_packet->dst  = (char) 100;
+                        new_packet->type = (char) PKT_DNS_LOOKUP;
+                        new_packet->length = 0;
+                        new_job = (struct host_job *) 
+                            malloc(sizeof(struct host_job));
+                        new_job->packet = new_packet;
+                        new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                        job_q_add(&job_q, new_job);
+
+                        new_packet = (struct packet *)
+                            malloc(sizeof(struct packet));	
+                        new_packet->type = PKT_PING_REPLY;
+                        new_job2 = (struct host_job *) 
+                            malloc(sizeof(struct host_job));
+                        new_job2->type   = JOB_DNS_RESPONSE;
+                        new_job2->ping_timer = 10;
+                        new_job2->packet = new_packet;
+                        job_q_add(&job_q, new_job2);
+
+                    }
+                    else {
+                        new_packet = (struct packet *)
+                            malloc(sizeof(struct packet));	
+                        new_packet->src = (char) host_id;
+                        new_packet->dst = (char) dst;
+                        new_packet->type = (char) PKT_PING_REQ;
+                        new_packet->length = 0;
+                        new_job = (struct host_job *) 
+                            malloc(sizeof(struct host_job));
+                        new_job->packet = new_packet;
+                        new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                        job_q_add(&job_q, new_job);
+
+                        new_job2 = (struct host_job *) 
+                            malloc(sizeof(struct host_job));
+                        new_job2->type = JOB_PING_WAIT_FOR_REPLY;
+                        new_job2->ping_timer = 10;
+                        job_q_add(&job_q, new_job2);
+                    }
 
                     break;
 
@@ -485,6 +517,15 @@ void host_main(int host_id)
                         free(in_packet);
                         free(new_job);
                         break;
+
+                    case (char) PKT_DNS_RESPONSE:
+                        dns_reply_received = 1;
+                        dns_host_id = -1;
+                        sscanf(in_packet->payload, "%d", &dns_host_id);
+                        free(in_packet);
+                        free(new_job);
+                        break;
+                        
 
                         /* 
                          * The next two packet types
@@ -805,8 +846,31 @@ void host_main(int host_id)
                         }	
                     } // dir_valid
                     break;
-            }
 
+                case JOB_DNS_RESPONSE:
+                    /* Wait for a ping reply packet */
+
+                    if(dns_reply_received == 1) {
+                        struct packet* jobs_packet = new_job->packet;
+                        switch(jobs_packet->type) {
+                            case (char) PKT_PING_REPLY:
+                                
+                                break;
+                            default:;
+                        }
+                    }
+                    else if(new_job->ping_timer > 1) {
+                        new_job->ping_timer--;
+                        job_q_add(&job_q, new_job);
+                    }
+                    else {
+                        n = sprintf(man_reply_msg, "No DNS response!");
+                        man_reply_msg[n] = '\0';
+                        write(man_port->send_fd, man_reply_msg, n + 1);
+                        free(new_job);
+                    }
+                    break;	
+            }
         }
 
 

@@ -219,7 +219,8 @@ void switch_main(int switch_id)
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             struct sockaddr_storage* their_addr = NULL;
             socklen_t addr_size;
-            n = switch_packet_recv(node_port[k], in_packet, &their_addr, &addr_size);
+            n = switch_packet_recv(node_port[k], in_packet, 
+				   &their_addr, &addr_size);
             if(n > 0) {
 //<<<<<<< HEAD
                 //If packet is a tree packet

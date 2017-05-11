@@ -69,7 +69,7 @@ void packet_send(struct net_port *port, struct packet *p)
         for (i=0; i<p->length; i++) {
             msg[i+9] = p->payload[i];
         }
-        send(port->sock_send_fd, msg, p->length+9, 0);
+//        send(port->sock_send_fd, msg, p->length+9, 0);
 //        for (i = 0; i < p->length; i++) {
 //             msg[i + 4] = p->payload[i];
 //        }
@@ -147,14 +147,6 @@ int packet_recv(struct net_port *port, struct packet *p)
     }
 
     else if(port->type == SOCKET) {
-//<<<<<<< HEAD
-        n = recv(port->sock_recv_fd, msg, PAYLOAD_MAX+9, 0);
-        if(n > 0) {
-            p->src = (char) msg[0];
-            p->dst = (char) msg[1];
-            p->type = (char) msg[2];
-//=======
-
         // connect to incoming connections
         struct sockaddr_storage their_addr;
         socklen_t addr_size;
@@ -184,8 +176,7 @@ int packet_recv(struct net_port *port, struct packet *p)
 }
 
 
-int switch_packet_recv(struct net_port *port, struct packet *p,
-                       struct sockaddr_storage** addr, socklen_t* addr_size)
+int switch_packet_recv(struct net_port *port, struct packet *p, struct sockaddr_storage** addr, socklen_t* addr_size)
 {
     char msg[PAYLOAD_MAX+4];
     int n;
@@ -218,7 +209,6 @@ int switch_packet_recv(struct net_port *port, struct packet *p,
     }
 
     else if(port->type == SOCKET) {
-
         // connect to incoming connections
         *addr = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage));
         int newfd = accept(port->sock_recv_fd, (struct sockaddr*)*addr, addr_size);
@@ -248,5 +238,3 @@ int switch_packet_recv(struct net_port *port, struct packet *p,
     }
     return n;
 }
-
-

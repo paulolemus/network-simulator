@@ -4,7 +4,7 @@
  *
  * Teammates: Kevin Cabael, Paulo Lemus
  *
- * File Name: switch.c
+ * File Name: dns.c
  * Description: Relay packets from one host to another
  *
  * Date Started: 16 March 2017
@@ -26,7 +26,7 @@
 #include "net.h"
 #include "man.h"
 #include "packet.h"
-#include "switch.h"
+#include "dns.h"
 
 #define FIVEMILLISEC 5000
 #define TABLE_SIZE   100
@@ -40,7 +40,7 @@
 /* Job queue operations */
 
 /* Add a job to the job queue */
-void switch_job_q_add(struct switch_job_queue *j_q, struct switch_job *j)
+void dns_job_q_add(struct dns_job_queue *j_q, struct dns_job *j)
 {
     if (j_q->head == NULL ) {
         j->next = NULL;
@@ -57,9 +57,9 @@ void switch_job_q_add(struct switch_job_queue *j_q, struct switch_job *j)
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct switch_job *switch_job_q_remove(struct switch_job_queue *j_q)
+struct dns_job *dns_job_q_remove(struct dns_job_queue *j_q)
 {
-    struct switch_job *j;
+    struct dns_job *j;
 
     if (j_q->occ == 0) return(NULL);
     j = j_q->head;
@@ -69,14 +69,14 @@ struct switch_job *switch_job_q_remove(struct switch_job_queue *j_q)
 }
 
 /* Initialize job queue */
-void switch_job_q_init(struct switch_job_queue *j_q)
+void dns_job_q_init(struct dns_job_queue *j_q)
 {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int switch_job_q_num(struct switch_job_queue *j_q)
+int dns_job_q_num(struct dns_job_queue *j_q)
 {
     return j_q->occ;
 }
@@ -110,7 +110,7 @@ struct net_port** init_table(struct net_port** list)
 }
 
 
-void switch_main(int switch_id)
+void dns_main(int dns_id)
 {
 
     struct net_port *node_port_list;
@@ -124,16 +124,16 @@ void switch_main(int switch_id)
     struct packet *new_packet;
 
     struct net_port *p;
-    struct switch_job *new_job;
-    struct switch_job *new_job2;
+    struct dns_job *new_job;
+    struct dns_job *new_job2;
 
-    struct switch_job_queue job_q;
+    struct dns_job_queue job_q;
 
     /*
      * Create an array node_port[ ] to store the network link ports
      * at the host.  The number of ports is node_port_num
      */
-    node_port_list = net_get_port_list(switch_id);
+    node_port_list = net_get_port_list(dns_id);
 
     /*  Count the number of network link ports */
     node_port_num = 0;
@@ -151,7 +151,7 @@ void switch_main(int switch_id)
 
     // Create an array of pointers to net_port structs,
     // with host id as the index
-    struct net_port** table = init_table(node_port);
+ //   struct net_port** table = init_table(node_port);
 
     //////////////////////////////
     // FD STUFF - WE LISTEN TO ONE PORT
@@ -206,7 +206,7 @@ void switch_main(int switch_id)
     ////////////////////////////////////
 
     /* Initialize the job queue */
-    switch_job_q_init(&job_q);
+    dns_job_q_init(&job_q);
 
     while(1) {
         /* Receive packet from a host */
@@ -214,7 +214,7 @@ void switch_main(int switch_id)
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             struct sockaddr_storage* their_addr = NULL;
             socklen_t addr_size;
-            n = switch_packet_recv(node_port[k], in_packet, &their_addr, &addr_size);
+            n = packet_recv(node_port[k], in_packet);
             if(n > 0) {
                 
                 // TODO: Determine where a packet came from if it came from a socket
@@ -229,7 +229,7 @@ void switch_main(int switch_id)
                     table[in_packet->src] = node_port[k];
                 }
 
-                printf("\nSwitch received a Packet!\n");
+                printf("\ndns received a Packet!\n");
                 printf("src: %d \n", in_packet->src);
                 printf("dst: %d \n", in_packet->dst);
                 printf("type: %d \n", in_packet->type);
@@ -256,7 +256,7 @@ void switch_main(int switch_id)
         } // for loop - receive packets
 
         // Execute one job in queue
-        if(switch_job_q_num(&job_q) > 0) {
+        if(dns_job_q_num(&job_q) > 0) {
 
         }
         usleep(FIVEMILLISEC);

@@ -87,25 +87,6 @@ struct net_port** init_table(struct net_port** list)
         malloc(TABLE_SIZE * sizeof(struct net_port*));
 
     for(int i = 0; i < TABLE_SIZE; ++i) table[i] = NULL;
-
-    struct net_port* port;
-    printf("PORT ITERATION HOSTS:");
-    for(port = list[0]; port != NULL; port = port->next) {
-        printf("%d ", port->pipe_host_id);
-    }
-    // These are the actual send FDs to send from
-    // this switch to all the hosts
-    printf("\nPORT ITERATION SEND:");
-    for(port = list[0]; port != NULL; port = port->next) {
-        if(port->type == PIPE) printf("%d ", port->pipe_send_fd);
-        else printf("%s %s ", port->connect_addr, port->connect_port);
-    }
-    // Hosts send to these FDs for switch to receive
-    printf("\nPORT ITERATION RECV:");
-    for(port = list[0]; port != NULL; port = port->next) {
-        if(port->type == PIPE) printf("%d ", port->pipe_recv_fd);
-        else printf("%s %s ", port->listen_addr, port->listen_port);
-    } printf("\n");
     return table;
 }
 
